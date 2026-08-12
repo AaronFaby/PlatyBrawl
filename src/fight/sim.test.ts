@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STAGE_IDS } from '../data/stages.ts'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
 import { createMatch, tickMatch } from './match.ts'
 
@@ -155,6 +156,18 @@ describe('match sim', () => {
     }
     expect(world.match.wins[0]).toBeGreaterThanOrEqual(2)
     expect(world.match.phase).toBe('over')
+  })
+
+  it('picks a stage and swaps it on the next round', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    expect(STAGE_IDS).toContain(world.match.stageId)
+    const first = world.match.stageId
+    skip(world, 120)
+    world.fighters[1].hp = 0
+    skip(world, 180)
+    expect(world.match.round).toBe(2)
+    expect(world.match.stageId).not.toBe(first)
+    expect(STAGE_IDS).toContain(world.match.stageId)
   })
 
   it('first to two KOs ends the match', () => {

@@ -38,4 +38,4 @@ export function spriteUrl(id: CharId, pose: Pose | 'portrait'): string {
   return `${import.meta.env.BASE_URL}sprites/${id}/${pose}.png`
 }
 
-export const STAGE_URL = `${import.meta.env.BASE_URL}stage/billabong.jpg`
+export { STAGE_IDS, stageUrl, type StageId } from '../data/stages.ts'

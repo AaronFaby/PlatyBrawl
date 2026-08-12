@@ -110,6 +110,8 @@ def main() -> None:
     save_portrait("32.jpg", OUT / "ninja/portrait.png")
     save_portrait("34.jpg", OUT / "cyber/portrait.png")
     save_stage("9.jpg", ROOT / "public" / "stage" / "billabong.jpg")
+    save_stage("36.jpg", ROOT / "public" / "stage" / "dojo.jpg")
+    save_stage("37.jpg", ROOT / "public" / "stage" / "neonlab.jpg")
     print("done")
 
 

@@ -1,4 +1,5 @@
-import { CHAR_META, FONT, LOGICAL_W, MAX_HP, WINS_NEEDED } from '../config.ts'
+import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W, MAX_HP, WINS_NEEDED } from '../config.ts'
+import { MOVESET } from '../data/moves.ts'
 import type { FightWorld } from '../fight/match.ts'
 
 export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: number): void {
@@ -45,6 +46,11 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
     ctx.fillText(match.announce, LOGICAL_W / 2, 130)
     ctx.restore()
   }
+
+  ctx.font = `5px ${FONT}`
+  ctx.fillStyle = '#6a5068'
+  ctx.textAlign = 'left'
+  ctx.fillText('H MOVES', 8, LOGICAL_H - 6)
 }
 
 function drawBar(
@@ -131,6 +137,56 @@ export function drawControlCard(ctx: CanvasRenderingContext2D, y: number): void 
   ctx.fillText('P1  WASD  U/I PUNCH  J/K KICK', LOGICAL_W / 2, y)
   ctx.fillText('P2  ARROWS  O/P PUNCH  L/; KICK', LOGICAL_W / 2, y + 10)
   ctx.fillText('SPECIALS  QC+BTN   DP+P   CHARGE B+F+P', LOGICAL_W / 2, y + 20)
+  ctx.fillText('IN FIGHT  H  PAUSE + MOVES', LOGICAL_W / 2, y + 30)
+}
+
+export function drawMovesOverlay(ctx: CanvasRenderingContext2D, world: FightWorld): void {
+  ctx.fillStyle = 'rgba(8,4,14,0.82)'
+  ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H)
+  ctx.textAlign = 'center'
+  ctx.font = `12px ${FONT}`
+  ctx.fillStyle = '#ffe14a'
+  ctx.fillText('PAUSED', LOGICAL_W / 2, 22)
+  ctx.font = `6px ${FONT}`
+  ctx.fillStyle = '#c8b8d8'
+  ctx.fillText('MOVESET', LOGICAL_W / 2, 34)
+
+  drawMovesCard(ctx, world.fighters[0].charId, 16, 46, '#ff4d8d', 'P1')
+  drawMovesCard(ctx, world.fighters[1].charId, 248, 46, '#3dc8ff', world.session.p2Cpu ? 'CPU' : 'P2')
+
+  ctx.textAlign = 'center'
+  ctx.font = `6px ${FONT}`
+  ctx.fillStyle = '#fff4c8'
+  ctx.fillText('H  OR  ESC  RESUME', LOGICAL_W / 2, LOGICAL_H - 10)
+}
+
+function drawMovesCard(
+  ctx: CanvasRenderingContext2D,
+  id: keyof typeof MOVESET,
+  x: number,
+  y: number,
+  accent: string,
+  tag: string,
+): void {
+  const meta = CHAR_META[id]
+  ctx.fillStyle = '#140c18'
+  ctx.fillRect(x, y, 216, 196)
+  ctx.strokeStyle = accent
+  ctx.lineWidth = 2
+  ctx.strokeRect(x, y, 216, 196)
+  ctx.textAlign = 'left'
+  ctx.font = `8px ${FONT}`
+  ctx.fillStyle = accent
+  ctx.fillText(tag, x + 10, y + 16)
+  ctx.fillStyle = '#fff4c8'
+  ctx.fillText(meta.short, x + 48, y + 16)
+  ctx.font = `6px ${FONT}`
+  ctx.fillStyle = '#c8b8d8'
+  ctx.fillText(meta.subtitle, x + 10, y + 30)
+  MOVESET[id].forEach((line, i) => {
+    ctx.fillStyle = i < 2 ? '#9a8aa8' : '#ffe27a'
+    ctx.fillText(line, x + 10, y + 50 + i * 18)
+  })
 }
 
 

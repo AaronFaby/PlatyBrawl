@@ -1,3 +1,8 @@
+const MASTER_GAIN = 0.68
+const SFX_GAIN = 1
+const MUSIC_GAIN = 0.78
+const MUSIC_DUCK = 0.22
+
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let sfxBus: GainNode | null = null
@@ -16,13 +21,13 @@ export function ac(): AudioContext {
   if (!ctx) {
     ctx = new AudioContext()
     master = ctx.createGain()
-    master.gain.value = 0.28
+    master.gain.value = MASTER_GAIN
     master.connect(ctx.destination)
     sfxBus = ctx.createGain()
-    sfxBus.gain.value = 0.9
+    sfxBus.gain.value = SFX_GAIN
     sfxBus.connect(master)
     musicBus = ctx.createGain()
-    musicBus.gain.value = muted ? 0 : 0.42
+    musicBus.gain.value = muted ? 0 : MUSIC_GAIN
     musicBus.connect(master)
   }
   if (ctx.state === 'suspended') void ctx.resume()
@@ -52,7 +57,7 @@ export function setMuted(on: boolean): void {
   }
   if (musicBus && ctx) {
     musicBus.gain.cancelScheduledValues(ctx.currentTime)
-    musicBus.gain.setTargetAtTime(on ? 0 : 0.42, ctx.currentTime, 0.04)
+    musicBus.gain.setTargetAtTime(on ? 0 : MUSIC_GAIN, ctx.currentTime, 0.04)
   }
 }
 
@@ -65,8 +70,8 @@ export function duckMusic(seconds = 0.35): void {
   if (!musicBus || !ctx || muted) return
   const t = ctx.currentTime
   musicBus.gain.cancelScheduledValues(t)
-  musicBus.gain.setValueAtTime(0.12, t)
-  musicBus.gain.linearRampToValueAtTime(0.42, t + seconds)
+  musicBus.gain.setValueAtTime(MUSIC_DUCK, t)
+  musicBus.gain.linearRampToValueAtTime(MUSIC_GAIN, t + seconds)
 }
 
 export function env(g: GainNode, t: number, peak: number, a: number, r: number): void {

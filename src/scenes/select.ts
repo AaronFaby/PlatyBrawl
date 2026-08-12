@@ -2,15 +2,11 @@ import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W } from '../config.ts'
 import type { CharId } from '../config.ts'
 import { ac, sfxLock, sfxSelect } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
+import { SPECIAL_LINES } from '../data/moves.ts'
+import { pickCpuOpponent } from '../data/roster.ts'
 import { p2WantsJoin } from '../input/devices.ts'
 import { getPortrait } from '../render/sprite.ts'
 import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
-
-const MOVES: Record<CharId, string[]> = {
-  bob: ['BILL DRILL  QCF+P', 'VENOM SPUR  DP+P'],
-  ninja: ['SHURIKEN  QCF+P', 'SHADOW STEP  QCB+K'],
-  cyber: ['PLASMA  CHARGE B+F+P', 'ROCKET KNEE  QCF+K'],
-}
 
 export function selectScene(game: Game): Scene {
   let c1 = 0
@@ -18,7 +14,6 @@ export function selectScene(game: Game): Scene {
   let lock1 = false
   let lock2 = false
   let p2Human = false
-  let idleP2 = 0
   let prev1 = 5
   let prev2 = 5
   let hold1 = 0
@@ -34,7 +29,6 @@ export function selectScene(game: Game): Scene {
       lock1 = false
       lock2 = false
       p2Human = !game.session.p2Cpu
-      idleP2 = 0
       prev1 = 5
       prev2 = 5
       hold1 = 0
@@ -56,39 +50,31 @@ export function selectScene(game: Game): Scene {
         }
       } else hold1 = 0
       prev1 = h1 ? d1 : 5
-      if (p2WantsJoin(game.devices)) {
+      if (!lock1 && p2WantsJoin(game.devices)) {
         p2Human = true
-        idleP2 = 0
       }
 
-      const cpuSteer = !p2Human && lock1 && !lock2 ? h1 : 0
-      const p2Steer = h2
-      const steer = p2Steer || cpuSteer
-      if (!lock2 && steer) {
+      if (p2Human && !lock2 && h2) {
         hold2 += 1
         if (prev2 === 5 || hold2 % 16 === 0) {
-          c2 = (c2 + steer + 3) % 3
+          c2 = (c2 + h2 + 3) % 3
           sfxSelect()
-          idleP2 = 0
         }
       } else hold2 = 0
-      prev2 = steer ? (p2Steer ? d2 : d1) : 5
+      prev2 = p2Human && h2 ? d2 : 5
 
       if (!lock1 && (game.p1.punchPress || game.p1.startPress || game.p1.kickPress)) {
         lock1 = true
         sfxLock()
-        idleP2 = 0
+        if (!p2Human) {
+          const cpuId = pickCpuOpponent(ROSTER_ORDER[c1])
+          c2 = ROSTER_ORDER.indexOf(cpuId)
+          lock2 = true
+        }
       }
       if (p2Human && !lock2 && (game.p2.punchPress || game.p2.kickPress)) {
         lock2 = true
         sfxLock()
-      }
-      if (!p2Human && lock1 && !lock2) {
-        idleP2 += 1
-        if ((idleP2 > 12 && (game.p1.punchPress || game.p1.startPress)) || idleP2 > 150) {
-          lock2 = true
-          sfxLock()
-        }
       }
 
       if (lock1 && lock2) {
@@ -111,10 +97,10 @@ export function selectScene(game: Game): Scene {
         const y = 70
         drawCard(ctx, id, x, y, {
           p1: i === c1,
-          p2: i === c2,
+          p2: p2Human ? i === c2 : lock2 && i === c2,
           l1: lock1 && i === c1,
           l2: lock2 && i === c2,
-          cpu: i === c2 && !p2Human,
+          cpu: !p2Human && lock2 && i === c2,
         })
       })
 
@@ -127,16 +113,14 @@ export function selectScene(game: Game): Scene {
           ? lock2
             ? 'P2 LOCKED'
             : 'P2  ARROWS  PICK   O LOCK'
-          : lock1
-            ? 'CPU  A/D OR ARROWS  PICK   U START'
-            : 'CPU  ARROWS PICK OPPONENT   O = HUMAN P2',
+          : 'CPU  LOCKS A RANDOM FOE   O = HUMAN P2',
         LOGICAL_W / 2,
         244,
       )
       const focused = ROSTER_ORDER[c1]
       ctx.fillStyle = '#c8b8d8'
       ctx.font = `6px ${FONT}`
-      MOVES[focused].forEach((line, i) => ctx.fillText(line, LOGICAL_W / 2, 256 + i * 8))
+      SPECIAL_LINES[focused].forEach((line, i) => ctx.fillText(line, LOGICAL_W / 2, 256 + i * 8))
     },
   }
 }

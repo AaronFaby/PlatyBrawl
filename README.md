@@ -24,7 +24,8 @@ npm run deploy
 
 - **P1:** WASD move, U/I punch, J/K kick
 - **P2:** arrows move, O/P punch, L/; kick
-- **M:** mute
-- CPU is the default opponent. After you lock P1, A/D or arrows pick the CPU fighter.
+- **M:** mute music
+- **H:** pause the match and show both movesets (Esc to resume)
+- CPU is the default opponent. After you lock P1 it picks one of the two characters you did not choose.
 
 Specials: quarter-circle + punch/kick, dragon punch + punch (Bob), charge back then forward + punch (Cyberplaty).

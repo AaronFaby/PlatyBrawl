@@ -73,13 +73,13 @@ export function titleScene(game: Game): Scene {
       ctx.font = `10px ${FONT}`
       ctx.globalAlpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(flash * 0.12))
       ctx.fillStyle = '#fff'
-      ctx.fillText('PRESS START', LOGICAL_W / 2, 216)
+      ctx.fillText('PRESS START', LOGICAL_W / 2, 208)
       ctx.globalAlpha = 1
 
-      drawControlCard(ctx, 234)
+      drawControlCard(ctx, 224)
       ctx.fillStyle = '#6a5068'
       ctx.font = `6px ${FONT}`
-      ctx.fillText(`FIRST TO 2   LOCAL + CPU   M ${isMuted() ? 'MUSIC OFF' : 'MUSIC ON'}`, LOGICAL_W / 2, 262)
+      ctx.fillText(`FIRST TO 2   LOCAL + CPU   M ${isMuted() ? 'MUSIC OFF' : 'MUSIC ON'}`, LOGICAL_W / 2, 266)
       void t
     },
   }

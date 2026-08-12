@@ -1,5 +1,6 @@
 import type { CharId } from '../config.ts'
 import { CHAR_IDS } from '../config.ts'
+import { STAGE_IDS, stageUrl, type StageId } from '../data/stages.ts'
 import { currentFrame } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
 import {
@@ -9,20 +10,19 @@ import {
   SPRITE_ORIGIN_Y,
   SPRITE_SCALE,
   spriteUrl,
-  STAGE_URL,
   type Pose,
 } from '../assets/manifest.ts'
 import type { Cam } from './camera.ts'
 
 export type SpriteBank = {
   chars: Record<CharId, Partial<Record<Pose | 'portrait', HTMLImageElement>>>
-  stage: HTMLImageElement | null
+  stages: Partial<Record<StageId, HTMLImageElement>>
   ready: boolean
 }
 
 export const bank: SpriteBank = {
   chars: { bob: {}, ninja: {}, cyber: {} },
-  stage: null,
+  stages: {},
   ready: false,
 }
 
@@ -46,11 +46,13 @@ export async function loadSprites(): Promise<void> {
       )
     }
   }
-  jobs.push(
-    loadImage(STAGE_URL).then((img) => {
-      bank.stage = img
-    }),
-  )
+  for (const id of STAGE_IDS) {
+    jobs.push(
+      loadImage(stageUrl(id)).then((img) => {
+        if (img) bank.stages[id] = img
+      }),
+    )
+  }
   await Promise.all(jobs)
   bank.ready = true
 }

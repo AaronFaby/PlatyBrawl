@@ -1,10 +1,17 @@
 import { GROUND_Y, LOGICAL_H, LOGICAL_W, STAGE_W } from '../config.ts'
+import type { StageId } from '../data/stages.ts'
 import type { Cam } from './camera.ts'
 import { bank } from './sprite.ts'
 
-export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number): void {
-  if (bank.stage) {
-    const img = bank.stage
+const GROUND: Record<StageId, { lip: string; mid: string; deep: string; wash: string }> = {
+  billabong: { lip: '#6a4830', mid: '#4a301c', deep: '#2a1810', wash: 'rgba(10,4,12,0.12)' },
+  dojo: { lip: '#7a5468', mid: '#3a2834', deep: '#181018', wash: 'rgba(16,6,22,0.14)' },
+  neonlab: { lip: '#3ad8e8', mid: '#1a2438', deep: '#0a101c', wash: 'rgba(8,4,24,0.16)' },
+}
+
+export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number, stageId: StageId = 'billabong'): void {
+  const img = bank.stages[stageId] ?? bank.stages.billabong
+  if (img) {
     const srcW = img.width
     const srcH = img.height
     const viewW = LOGICAL_W
@@ -13,15 +20,16 @@ export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number): v
     const dw = srcW * scale
     const dh = srcH * scale
     const sx = (cam.x / STAGE_W) * Math.max(0, dw - viewW)
+    const pal = GROUND[stageId]
     ctx.imageSmoothingEnabled = false
     ctx.drawImage(img, -sx, GROUND_Y - dh + 18, dw, dh)
-    ctx.fillStyle = 'rgba(10,4,12,0.12)'
+    ctx.fillStyle = pal.wash
     ctx.fillRect(0, 0, LOGICAL_W, GROUND_Y)
-    ctx.fillStyle = '#4a301c'
+    ctx.fillStyle = pal.mid
     ctx.fillRect(0, GROUND_Y, LOGICAL_W, 5)
-    ctx.fillStyle = '#2a1810'
+    ctx.fillStyle = pal.deep
     ctx.fillRect(0, GROUND_Y + 5, LOGICAL_W, LOGICAL_H - GROUND_Y - 5)
-    ctx.fillStyle = '#6a4830'
+    ctx.fillStyle = pal.lip
     ctx.fillRect(0, GROUND_Y, LOGICAL_W, 2)
     return
   }

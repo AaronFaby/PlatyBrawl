@@ -46,64 +46,64 @@ function noiseHit(dur: number, peak: number, hp: number, when = 0): void {
 }
 
 export function sfxSelect(): void {
-  tone('square', 740, 0.07, 0.16, 1180)
+  tone('square', 740, 0.07, 0.26, 1180)
 }
 
 export function sfxLock(): void {
-  tone('square', 196, 0.12, 0.22, 392)
-  tone('square', 247, 0.1, 0.12, 494, 0.04)
+  tone('square', 196, 0.12, 0.34, 392)
+  tone('square', 247, 0.1, 0.2, 494, 0.04)
 }
 
 export function sfxWhoosh(): void {
-  noiseHit(0.1, 0.12, 800)
-  tone('sawtooth', 220, 0.11, 0.07, 70)
+  noiseHit(0.1, 0.22, 800)
+  tone('sawtooth', 220, 0.11, 0.14, 70)
 }
 
 export function sfxHit(): void {
-  noiseHit(0.09, 0.32, 300)
-  tone('square', 160, 0.1, 0.28, 48)
-  tone('triangle', 90, 0.08, 0.18, 40)
+  noiseHit(0.09, 0.48, 300)
+  tone('square', 160, 0.1, 0.42, 48)
+  tone('triangle', 90, 0.08, 0.28, 40)
 }
 
 export function sfxBlock(): void {
-  noiseHit(0.05, 0.14, 1800)
-  tone('square', 640, 0.07, 0.16, 210)
+  noiseHit(0.05, 0.24, 1800)
+  tone('square', 640, 0.07, 0.26, 210)
 }
 
 export function sfxJump(): void {
-  tone('square', 280, 0.1, 0.1, 520)
+  tone('square', 280, 0.1, 0.2, 520)
 }
 
 export function sfxSpecial(): void {
-  noiseHit(0.12, 0.16, 600)
-  tone('sawtooth', 320, 0.16, 0.14, 90)
-  tone('square', 480, 0.1, 0.1, 160, 0.03)
+  noiseHit(0.12, 0.28, 600)
+  tone('sawtooth', 320, 0.16, 0.24, 90)
+  tone('square', 480, 0.1, 0.18, 160, 0.03)
 }
 
 export function sfxKo(): void {
   duckMusic(0.8)
   ;[midi(57), midi(53), midi(50), midi(45)].forEach((f, i) => {
-    tone('square', f, 0.22, 0.2, f * 0.7, i * 0.08)
+    tone('square', f, 0.22, 0.32, f * 0.7, i * 0.08)
   })
   noiseHit(0.25, 0.22, 200, 0.02)
 }
 
 export function sfxStart(): void {
   ;[midi(67), midi(71), midi(74), midi(79)].forEach((f, i) => {
-    tone('square', f, 0.14, 0.16, undefined, i * 0.06)
+    tone('square', f, 0.14, 0.26, undefined, i * 0.06)
   })
 }
 
 export function sfxFight(): void {
   duckMusic(0.25)
-  tone('square', midi(62), 0.18, 0.2)
-  tone('square', midi(69), 0.18, 0.16, undefined, 0.05)
-  noiseHit(0.12, 0.14, 400)
+  tone('square', midi(62), 0.18, 0.32)
+  tone('square', midi(69), 0.18, 0.26, undefined, 0.05)
+  noiseHit(0.12, 0.22, 400)
 }
 
 export function sfxWin(): void {
   ;[midi(62), midi(66), midi(69), midi(74), midi(81)].forEach((f, i) => {
-    tone('square', f, 0.2, 0.16, undefined, i * 0.07)
-    tone('triangle', f / 2, 0.22, 0.08, undefined, i * 0.07)
+    tone('square', f, 0.2, 0.26, undefined, i * 0.07)
+    tone('triangle', f / 2, 0.22, 0.14, undefined, i * 0.07)
   })
 }

@@ -1,4 +1,5 @@
 import type { CharId } from '../config.ts'
+import type { StageId } from '../data/stages.ts'
 
 export type PlayerId = 0 | 1
 export type Facing = 1 | -1
@@ -153,6 +154,7 @@ export type MatchState = {
   announce: string
   winner: PlayerId | null
   timeout: boolean
+  stageId: StageId
 }
 
 export type Session = {

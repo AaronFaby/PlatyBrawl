@@ -7,7 +7,7 @@ import { ensureBgm } from '../audio/bgm.ts'
 import { createMatch, tickMatch, type FightWorld } from '../fight/match.ts'
 import { createCam, updateCam } from '../render/camera.ts'
 import { drawDebug } from '../render/debug.ts'
-import { drawHud, drawProjectiles, drawSparks } from '../render/hud.ts'
+import { drawHud, drawMovesOverlay, drawProjectiles, drawSparks } from '../render/hud.ts'
 import { drawFighter } from '../render/platy.ts'
 import { drawStage } from '../render/stage.ts'
 import type { Game, Scene } from './context.ts'
@@ -18,6 +18,8 @@ export function fightScene(game: Game): Scene {
   let lastAnnounce = ''
   let lastProj = 0
   let lastStatus: [string, string] = ['idle', 'idle']
+  let paused = false
+  let helpHeld = false
 
   return {
     id: 'fight',
@@ -34,10 +36,18 @@ export function fightScene(game: Game): Scene {
       lastAnnounce = ''
       lastProj = 0
       lastStatus = ['idle', 'idle']
+      paused = false
+      helpHeld = false
       ensureBgm('fight')
     },
     exit() {},
     update() {
+      const helpNow = game.devices.down.has('KeyH')
+      if (helpNow && !helpHeld) paused = !paused
+      helpHeld = helpNow
+      if (paused && game.devices.down.has('Escape')) paused = false
+      if (paused) return
+
       let p2 = game.p2
       if (game.session.p2Cpu) p2 = tickCpu(game.cpu, world.fighters[1], world.fighters[0])
       tickMatch(world, [game.p1, p2], game.devices.debugDummyBlock)
@@ -71,7 +81,7 @@ export function fightScene(game: Game): Scene {
       const sy = shake > 0 ? (Math.random() - 0.5) * shake * 2 : 0
       ctx.save()
       ctx.translate(sx, sy)
-      drawStage(ctx, game.cam, game.tick)
+      drawStage(ctx, game.cam, game.tick, world.match.stageId)
       const order = [...world.fighters].sort((a, b) => a.y - b.y)
       for (const f of order) drawFighter(ctx, f, game.cam, game.tick)
       drawProjectiles(ctx, world, game.cam.x)
@@ -79,6 +89,7 @@ export function fightScene(game: Game): Scene {
       ctx.restore()
       drawHud(ctx, world, game.tick)
       if (game.devices.debugHitboxes) drawDebug(ctx, world, game.cam)
+      if (paused) drawMovesOverlay(ctx, world)
       void LOGICAL_W
       void LOGICAL_H
     },

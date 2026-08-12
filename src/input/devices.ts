@@ -38,6 +38,8 @@ const GAME_CODES = new Set([
   'F2',
   'F3',
   'KeyM',
+  'KeyH',
+  'Escape',
 ])
 
 export type RawStick = {
