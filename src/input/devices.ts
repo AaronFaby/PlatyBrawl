@@ -128,25 +128,12 @@ function facePressed(pad: Gamepad | null): boolean {
   return !!(pad.buttons[0]?.pressed || pad.buttons[1]?.pressed || pad.buttons[2]?.pressed || pad.buttons[3]?.pressed)
 }
 
-function samePadState(a: Gamepad, b: Gamepad): boolean {
-  if (a.id !== b.id || a.mapping !== b.mapping) return false
-  if (a.axes.length !== b.axes.length) return false
-  for (let i = 0; i < a.axes.length; i++) {
-    if (Math.abs((a.axes[i] ?? 0) - (b.axes[i] ?? 0)) > 0.02) return false
-  }
-  const n = Math.min(a.buttons.length, b.buttons.length)
-  for (let i = 0; i < n; i++) {
-    if (!!a.buttons[i]?.pressed !== !!b.buttons[i]?.pressed) return false
-  }
-  return true
-}
-
 /** Slot 0 is always P1. Slot 1 is a second distinct pad only — never the same stick twice. */
 function pollPads(pads: (Gamepad | null)[]): void {
   const list = navigator.getGamepads ? [...navigator.getGamepads()].filter((g): g is Gamepad => !!g) : []
   const unique: Gamepad[] = []
   for (const g of list) {
-    if (unique.some((u) => u.index === g.index || samePadState(u, g))) continue
+    if (unique.some((u) => u.index === g.index)) continue
     unique.push(g)
   }
   pads[0] = unique[0] ?? null
@@ -222,6 +209,7 @@ export function readP1(devices: DeviceState): RawStick {
   if (d.has('KeyJ')) s.lk = true
   if (d.has('KeyK')) s.hk = true
   if (d.has('Enter') || d.has('Space')) s.start = true
+  applyPad(s, devices.padArmed[0] ? devices.pads[0] : null)
   return s
 }
 
@@ -238,7 +226,22 @@ export function readP2(devices: DeviceState): RawStick {
   if (d.has('Numpad1') || d.has('KeyL')) s.lk = true
   if (d.has('Numpad2') || d.has('Semicolon')) s.hk = true
   if (d.has('Enter')) s.start = true
+  applyPad(s, devices.padArmed[1] ? devices.pads[1] : null)
   return s
+}
+
+function applyPad(stick: RawStick, pad: Gamepad | null): void {
+  if (!pad) return
+  const move = padMove(pad)
+  stick.left ||= move.left
+  stick.right ||= move.right
+  stick.up ||= move.up
+  stick.down ||= move.down
+  stick.lp ||= !!pad.buttons[0]?.pressed
+  stick.hp ||= !!pad.buttons[1]?.pressed
+  stick.lk ||= !!pad.buttons[2]?.pressed
+  stick.hk ||= !!pad.buttons[3]?.pressed
+  stick.start ||= !!pad.buttons[9]?.pressed
 }
 
 const P2_JOIN_KEYS = ['Numpad4', 'Numpad5', 'Numpad1', 'Numpad2', 'KeyO', 'KeyP', 'KeyL', 'Semicolon'] as const

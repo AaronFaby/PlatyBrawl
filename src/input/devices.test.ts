@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { emptyStick, p2WantsJoin, readP1, readP2, type DeviceState } from './devices.ts'
 
-function fakePad(axes: number[], dpadRight = false): Gamepad {
+function fakePad(axes: number[], dpadRight = false, face = false): Gamepad {
   const buttons = Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 }))
   if (dpadRight) buttons[15] = { pressed: true, touched: true, value: 1 }
+  if (face) buttons[0] = { pressed: true, touched: true, value: 1 }
   return {
     id: 'pad',
     index: 0,
@@ -74,6 +75,20 @@ describe('unarmed pads', () => {
     const d = mockDevices(['KeyD'])
     expect(readP1(d).right).toBe(true)
     expect(readP2(d).right).toBe(false)
+  })
+
+  it('reads movement and attacks after a pad is armed', () => {
+    const d = mockDevices([], [fakePad([0.99, 0], true, true), null])
+    d.padArmed[0] = true
+    const p1 = readP1(d)
+    expect(p1.right).toBe(true)
+    expect(p1.lp).toBe(true)
+  })
+
+  it('keeps keyboard movement available while an armed pad is idle', () => {
+    const d = mockDevices(['KeyD'], [fakePad([0, 0]), null])
+    d.padArmed[0] = true
+    expect(readP1(d).right).toBe(true)
   })
 })
 

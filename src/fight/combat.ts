@@ -130,11 +130,11 @@ export function resolveStrikes(
   match: MatchState,
 ): void {
   if (a.hitstop > 0 || b.hitstop > 0) return
-  tryHit(a, b, bIn, match)
-  tryHit(b, a, aIn, match)
+  const hits = [prepareHit(a, b, bIn, match), prepareHit(b, a, aIn, match)]
+  for (const hit of hits) hit?.()
 }
 
-function tryHit(attacker: Fighter, victim: Fighter, victimIn: VirtualInput, match: MatchState): void {
+function prepareHit(attacker: Fighter, victim: Fighter, victimIn: VirtualInput, match: MatchState): (() => void) | undefined {
   if (!attacker.moveId || attacker.hasHit) return
   if (attacker.status !== 'attack' && attacker.status !== 'special') return
   if (invuln(victim)) return
@@ -150,10 +150,12 @@ function tryHit(attacker: Fighter, victim: Fighter, victimIn: VirtualInput, matc
       if (!overlaps(hit, hurt)) continue
       if (headInvuln(victim) && hit.y + hit.h < victim.y - 28) continue
       const blocked = isBlocking(victim, victimIn, move.height)
-      applyHit(attacker, victim, move, blocked, match, overlapCenter(hit, hurt))
-      attacker.hasHit = true
-      if (!blocked) attacker.canCancel = true
-      return
+      const contact = overlapCenter(hit, hurt)
+      return () => {
+        applyHit(attacker, victim, move, blocked, match, contact)
+        attacker.hasHit = true
+        if (!blocked) attacker.canCancel = true
+      }
     }
   }
 }
