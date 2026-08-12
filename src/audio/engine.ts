@@ -2,7 +2,15 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let sfxBus: GainNode | null = null
 let musicBus: GainNode | null = null
-let muted = localStorage.getItem('platybrawlMusic') === 'off'
+let muted = loadMuted()
+
+function loadMuted(): boolean {
+  try {
+    return localStorage.getItem('platybrawlMusic') === 'off'
+  } catch {
+    return false
+  }
+}
 
 export function ac(): AudioContext {
   if (!ctx) {
@@ -37,7 +45,11 @@ export function isMuted(): boolean {
 
 export function setMuted(on: boolean): void {
   muted = on
-  localStorage.setItem('platybrawlMusic', on ? 'off' : 'on')
+  try {
+    localStorage.setItem('platybrawlMusic', on ? 'off' : 'on')
+  } catch {
+    // Storage can be unavailable in private contexts; muting should still work.
+  }
   if (musicBus && ctx) {
     musicBus.gain.cancelScheduledValues(ctx.currentTime)
     musicBus.gain.setTargetAtTime(on ? 0 : 0.42, ctx.currentTime, 0.04)

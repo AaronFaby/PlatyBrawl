@@ -38,22 +38,9 @@ export function fightScene(game: Game): Scene {
     },
     exit() {},
     update() {
-      const keys = game.devices.down
-      const p1 = { ...game.p1 }
-      if (!keys.has('KeyA') && !keys.has('KeyD') && !keys.has('KeyW') && !keys.has('KeyS')) {
-        p1.dir = 5
-      }
       let p2 = game.p2
       if (game.session.p2Cpu) p2 = tickCpu(game.cpu, world.fighters[1], world.fighters[0])
-      else if (
-        !keys.has('ArrowLeft') &&
-        !keys.has('ArrowRight') &&
-        !keys.has('ArrowUp') &&
-        !keys.has('ArrowDown')
-      ) {
-        p2 = { ...p2, dir: 5 }
-      }
-      tickMatch(world, [p1, p2], game.devices.debugDummyBlock)
+      tickMatch(world, [game.p1, p2], game.devices.debugDummyBlock)
       updateCam(game.cam, world.fighters[0], world.fighters[1])
 
       for (const f of world.fighters) {

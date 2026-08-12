@@ -85,6 +85,18 @@ describe('match sim', () => {
     expect(world.fighters[1].hp).toBeLessThan(1000)
   })
 
+  it('allows simultaneous strikes to trade', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[0].x = 300
+    world.fighters[1].x = 328
+    const jab = hold(emptyInput(), { lp: true })
+    tickMatch(world, [jab, jab], false)
+    skip(world, 10)
+    expect(world.fighters[0].hp).toBe(960)
+    expect(world.fighters[1].hp).toBe(960)
+  })
+
   it('Bob QCF+P starts Bill Drill', () => {
     const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: true })
     skip(world, 120)
