@@ -1,0 +1,256 @@
+import { rect } from '../../fight/boxes.ts'
+import type { CharDef } from '../../fight/types.ts'
+import {
+  airHurt,
+  airPush,
+  crouchHurt,
+  crouchPush,
+  f,
+  loopIdle,
+  loopWalk,
+  strike,
+} from '../anim.ts'
+
+const cancel = ['shurikenL', 'shurikenH', 'shadowStepL', 'shadowStepH']
+
+const lp = strike({
+  id: 'standLP',
+  startup: 4,
+  active: 3,
+  recovery: 7,
+  hit: rect(12, -48, 36, 14),
+  damage: 35,
+  hitstun: 11,
+  blockstun: 7,
+  hitstop: 3,
+  height: 'high',
+  cancelInto: cancel,
+  pushHit: 1.4,
+})
+
+const hp = strike({
+  id: 'standHP',
+  startup: 9,
+  active: 4,
+  recovery: 15,
+  hit: rect(10, -64, 40, 32),
+  damage: 95,
+  hitstun: 17,
+  blockstun: 11,
+  hitstop: 6,
+  height: 'mid',
+  cancelInto: cancel,
+  pushHit: 2.2,
+})
+
+const lk = strike({
+  id: 'standLK',
+  startup: 4,
+  active: 3,
+  recovery: 9,
+  hit: rect(8, -26, 22, 14),
+  damage: 45,
+  hitstun: 11,
+  blockstun: 7,
+  hitstop: 3,
+  height: 'mid',
+  cancelInto: cancel,
+})
+
+const hk = strike({
+  id: 'standHK',
+  startup: 8,
+  active: 4,
+  recovery: 16,
+  hit: rect(6, -40, 34, 22),
+  damage: 95,
+  hitstun: 15,
+  blockstun: 11,
+  hitstop: 6,
+  height: 'mid',
+  pushHit: 2.4,
+})
+
+const clp = strike({
+  id: 'crouchLP',
+  startup: 4,
+  active: 2,
+  recovery: 7,
+  hit: rect(10, -20, 26, 12),
+  damage: 32,
+  hitstun: 10,
+  blockstun: 6,
+  hitstop: 3,
+  height: 'low',
+  hurt: crouchHurt,
+  push: crouchPush,
+  cancelInto: cancel,
+})
+
+const chk = strike({
+  id: 'crouchHK',
+  startup: 7,
+  active: 5,
+  recovery: 18,
+  hit: rect(2, -16, 40, 14),
+  damage: 85,
+  hitstun: 14,
+  blockstun: 10,
+  hitstop: 6,
+  height: 'low',
+  knockdown: true,
+  hurt: crouchHurt,
+  push: crouchPush,
+  dvx: 2.2,
+})
+
+const jlp = strike({
+  id: 'jumpLP',
+  startup: 4,
+  active: 10,
+  recovery: 4,
+  hit: rect(8, -36, 24, 16),
+  damage: 45,
+  hitstun: 10,
+  blockstun: 6,
+  hitstop: 4,
+  height: 'air',
+  hurt: airHurt,
+  push: airPush,
+})
+
+const jhk = strike({
+  id: 'jumpHK',
+  startup: 6,
+  active: 8,
+  recovery: 6,
+  hit: rect(4, -28, 30, 20),
+  damage: 85,
+  hitstun: 12,
+  blockstun: 8,
+  hitstop: 6,
+  height: 'air',
+  hurt: airHurt,
+  push: airPush,
+})
+
+const starL = [
+  f(8, { cell: 0 }),
+  f(4, { cell: 1, flags: { projectile: 'shuriken' } }),
+  f(12, { cell: 2 }),
+]
+const starH = [
+  f(10, { cell: 0 }),
+  f(4, { cell: 1, flags: { projectile: 'shuriken' } }),
+  f(14, { cell: 2 }),
+]
+const stepL = [
+  f(6, { cell: 0, hurt: [], flags: { invuln: true } }),
+  f(4, { cell: 1, hurt: [], flags: { invuln: true, teleport: 'front' } }),
+  f(10, { cell: 2 }),
+]
+const stepH = [
+  f(8, { cell: 0, hurt: [], flags: { invuln: true } }),
+  f(4, { cell: 1, hurt: [], flags: { invuln: true, teleport: 'behind' } }),
+  f(12, { cell: 2 }),
+]
+
+export const ninja: CharDef = {
+  id: 'ninja',
+  name: 'NINJA PLATY',
+  subtitle: 'RUSHDOWN',
+  walkSpeed: 1.9,
+  backSpeed: 1.35,
+  jumpV: -6.35,
+  anims: {
+    idle: loopIdle(),
+    walk: loopWalk(),
+    walkBack: loopWalk(),
+    crouch: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    jump: [f(99, { cell: 0, hurt: airHurt, push: airPush })],
+    land: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    block: [f(4, { cell: 0 })],
+    crouchBlock: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    hurt: [f(4, { cell: 0 }), f(4, { cell: 1 })],
+    knockdown: [f(18, { cell: 0, hurt: [], push: rect(-18, -16, 36, 16) })],
+    wakeup: [f(8, { cell: 0, hurt: crouchHurt, push: crouchPush, flags: { invuln: true } })],
+    throw: [f(8, { cell: 0 }), f(12, { cell: 1 })],
+    thrown: [f(20, { cell: 0, hurt: [] })],
+    win: [f(10, { cell: 0 }), f(10, { cell: 1 })],
+    ko: [f(8, { cell: 0, hurt: [] }), f(40, { cell: 1, hurt: [], push: rect(-18, -16, 36, 16) })],
+    standLP: lp.anim,
+    standHP: hp.anim,
+    standLK: lk.anim,
+    standHK: hk.anim,
+    crouchLP: clp.anim,
+    crouchHK: chk.anim,
+    jumpLP: jlp.anim,
+    jumpHK: jhk.anim,
+    shurikenL: starL,
+    shurikenH: starH,
+    shadowStepL: stepL,
+    shadowStepH: stepH,
+  },
+  moves: {
+    standLP: lp.move,
+    standHP: hp.move,
+    standLK: lk.move,
+    standHK: hk.move,
+    crouchLP: clp.move,
+    crouchHK: chk.move,
+    jumpLP: jlp.move,
+    jumpHK: jhk.move,
+    shurikenL: {
+      id: 'shurikenL',
+      anim: 'shurikenL',
+      damage: 60,
+      onHitStun: 14,
+      onBlockStun: 10,
+      hitstop: 4,
+      height: 'high',
+      pushHit: 1.2,
+    },
+    shurikenH: {
+      id: 'shurikenH',
+      anim: 'shurikenH',
+      damage: 70,
+      onHitStun: 14,
+      onBlockStun: 10,
+      hitstop: 4,
+      height: 'high',
+      pushHit: 1.4,
+    },
+    shadowStepL: {
+      id: 'shadowStepL',
+      anim: 'shadowStepL',
+      damage: 0,
+      onHitStun: 0,
+      onBlockStun: 0,
+      hitstop: 0,
+      height: 'mid',
+    },
+    shadowStepH: {
+      id: 'shadowStepH',
+      anim: 'shadowStepH',
+      damage: 0,
+      onHitStun: 0,
+      onBlockStun: 0,
+      hitstop: 0,
+      height: 'mid',
+    },
+    throw: {
+      id: 'throw',
+      anim: 'throw',
+      damage: 140,
+      onHitStun: 20,
+      onBlockStun: 0,
+      hitstop: 8,
+      knockdown: true,
+      height: 'mid',
+    },
+  },
+  specials: [
+    { motion: 'qcf', button: 'p', light: 'shurikenL', heavy: 'shurikenH' },
+    { motion: 'qcb', button: 'k', light: 'shadowStepL', heavy: 'shadowStepH' },
+  ],
+}
