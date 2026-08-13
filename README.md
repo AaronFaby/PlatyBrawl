@@ -2,7 +2,7 @@
 
 A 90s arcade-style 2D fighting game. Three platypuses, motion specials, first-to-two rounds, local 2-player or vs CPU. Built as a Street Fighter II / Mortal Kombat cabinet slice: title → select → VS → fight → rematch.
 
-Play it: [platybrawl.aaron-faby.workers.dev](https://platybrawl.aaron-faby.workers.dev)
+Play it: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com)
 
 Click or press a key once so the browser will play sound.
 
@@ -110,7 +110,7 @@ npx wrangler login
 npm run deploy
 ```
 
-That publishes to [platybrawl.aaron-faby.workers.dev](https://platybrawl.aaron-faby.workers.dev). Hard-refresh if an old JS bundle is still cached.
+That publishes to [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com). Hard-refresh if an old JS bundle is still cached.
 
 The repo is [AaronFaby/PlatyBrawl](https://github.com/AaronFaby/PlatyBrawl).
 
