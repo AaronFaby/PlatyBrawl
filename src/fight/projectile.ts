@@ -1,8 +1,27 @@
 import { STAGE_W } from '../config.ts'
 import type { Fighter, Projectile } from './types.ts'
 
-export function spawnFrom(owner: Fighter, kind: 'shuriken' | 'beam', heavy: boolean): Projectile {
+export function spawnFrom(owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean): Projectile {
   const facing = owner.facing
+  if (kind === 'bullet') {
+    return {
+      owner: owner.id,
+      kind,
+      x: owner.x + facing * 58,
+      y: owner.y - 67,
+      vx: facing * (heavy ? 5.4 : 4.0),
+      w: 12,
+      h: 6,
+      damage: heavy ? 85 : 65,
+      onHitStun: heavy ? 16 : 14,
+      onBlockStun: 10,
+      hitstop: heavy ? 6 : 4,
+      height: 'high',
+      life: heavy ? 70 : 80,
+      hasHit: false,
+      facing,
+    }
+  }
   if (kind === 'shuriken') {
     return {
       owner: owner.id,

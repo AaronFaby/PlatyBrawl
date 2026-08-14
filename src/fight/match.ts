@@ -89,7 +89,7 @@ export function tickMatch(
     frame: world.frame,
     other: fighters[id === 0 ? 1 : 0],
     match,
-    spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam', heavy: boolean) => {
+    spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean) => {
       match.projectiles.push(spawnFrom(owner, kind, heavy))
     },
   })

@@ -27,8 +27,20 @@ export function poseForAnim(anim: string, cell: number): Pose {
   if (anim === 'jump') return 'jump'
   if (anim === 'win') return 'win'
   if (anim === 'hurt' || anim === 'thrown' || anim === 'knockdown' || anim === 'ko') return 'hurt'
-  if (anim.startsWith('billDrill') || anim.startsWith('shuriken') || anim.startsWith('plasma')) return 'special1'
-  if (anim.startsWith('venom') || anim.startsWith('shadow') || anim.startsWith('rocket')) return 'special2'
+  if (
+    anim.startsWith('billDrill') ||
+    anim.startsWith('shuriken') ||
+    anim.startsWith('plasma') ||
+    anim.startsWith('pistol')
+  )
+    return 'special1'
+  if (
+    anim.startsWith('venom') ||
+    anim.startsWith('shadow') ||
+    anim.startsWith('rocket') ||
+    anim.startsWith('combatRush')
+  )
+    return 'special2'
   if (anim.includes('LK') || anim.includes('HK') || anim === 'standLK' || anim === 'standHK') return 'kick'
   if (anim.includes('LP') || anim.includes('HP') || anim === 'throw') return 'punch'
   return 'idle'

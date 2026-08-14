@@ -11,4 +11,12 @@ describe('pose mapping', () => {
     expect(poseForAnim('walk', 0)).toBe('walk')
     expect(poseForAnim('walk', 1)).toBe('idle')
   })
+
+  it('maps soldier specials to the pistol and rush poses', () => {
+    expect(poseForAnim('pistolShotL', 1)).toBe('special1')
+    expect(poseForAnim('pistolShotH', 0)).toBe('special1')
+    expect(poseForAnim('combatRushL', 1)).toBe('special2')
+    expect(poseForAnim('standLP', 1)).toBe('punch')
+    expect(poseForAnim('standHK', 1)).toBe('kick')
+  })
 })

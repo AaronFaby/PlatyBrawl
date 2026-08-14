@@ -1,22 +1,40 @@
+import { CHARGE_FRAMES, STAGE_W } from '../config.ts'
 import { airborne, grounded } from '../fight/fighter.ts'
-import type { Fighter } from '../fight/types.ts'
+import type { CpuDifficulty, Fighter } from '../fight/types.ts'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
 
+export type { CpuDifficulty }
+
 type Plan = { ticks: number; dir: number; lp?: boolean; hp?: boolean; lk?: boolean; hk?: boolean }
+
+type Tune = {
+  reactFrames: number
+  coolMin: number
+  coolRange: number
+  startCool: number
+  blockRange: number
+  special: number
+}
+
+const TUNE: Record<CpuDifficulty, Tune> = {
+  normal: { reactFrames: 8, coolMin: 16, coolRange: 22, startCool: 96, blockRange: 110, special: 1 },
+  hard: { reactFrames: 3, coolMin: 8, coolRange: 10, startCool: 36, blockRange: 150, special: 1.7 },
+}
 
 export type CpuBrain = {
   plan: Plan[]
   cool: number
   react: number
+  difficulty: CpuDifficulty
 }
 
-export function createCpu(): CpuBrain {
-  return { plan: [], cool: 20, react: 0 }
+export function createCpu(difficulty: CpuDifficulty = 'normal'): CpuBrain {
+  return { plan: [], cool: 20, react: 0, difficulty }
 }
 
 export function resetCpu(cpu: CpuBrain): void {
   cpu.plan = []
-  cpu.cool = 96
+  cpu.cool = TUNE[cpu.difficulty].startCool
   cpu.react = 0
 }
 
@@ -55,6 +73,44 @@ function holdGuard(me: Fighter, other: Fighter): VirtualInput {
   return out
 }
 
+function cornered(me: Fighter): boolean {
+  return me.x < 80 || me.x > STAGE_W - 80
+}
+
+/** Charge Plasma as one plan so cooldown cannot dump the charge, then rush with Rocket Knee. */
+function planCyber(cpu: CpuBrain, me: Fighter, dist: number, hard: boolean): boolean {
+  const charged = me.buffer.chargeBack >= CHARGE_FRAMES
+  const r = rand()
+
+  if (charged && dist > 64) {
+    cpu.plan.push({ ticks: 3, dir: toward(me), hp: true })
+    return true
+  }
+
+  if (dist > 70 && dist < 210 && r < (hard ? 0.52 : 0.4)) {
+    pushMotion(cpu.plan, [2, 3, 6], rand() < 0.5 ? 'hk' : 'lk', me.facing)
+    return true
+  }
+
+  if (dist > 140 && !cornered(me) && r < (hard ? 0.36 : 0.3)) {
+    cpu.plan.push({ ticks: CHARGE_FRAMES + 4, dir: away(me) })
+    cpu.plan.push({ ticks: 3, dir: toward(me), hp: true })
+    return true
+  }
+
+  if (dist <= 72 && r < 0.4) {
+    pushMotion(cpu.plan, [2, 3, 6], rand() < 0.45 ? 'hk' : 'lk', me.facing)
+    return true
+  }
+
+  if (dist > 48 && r < 0.84) {
+    cpu.plan.push({ ticks: 12 + Math.floor(rand() * 12), dir: toward(me) })
+    return true
+  }
+
+  return false
+}
+
 function edgesFromHeld(held: VirtualInput): VirtualInput {
   held.lpPress = held.lp
   held.hpPress = held.hp
@@ -66,7 +122,10 @@ function edgesFromHeld(held: VirtualInput): VirtualInput {
 }
 
 export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInput {
+  const tune = TUNE[cpu.difficulty]
   const otherAtk = other.status === 'attack' || other.status === 'special'
+  const hard = cpu.difficulty === 'hard'
+  const sp = tune.special
 
   if (cpu.plan.length > 0) {
     const step = cpu.plan[0]
@@ -83,7 +142,7 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
 
   if (cpu.cool > 0) {
     cpu.cool -= 1
-    if (otherAtk && cpu.react >= 8) return holdGuard(me, other)
+    if (otherAtk && cpu.react >= tune.reactFrames) return holdGuard(me, other)
     if (otherAtk) cpu.react += 1
     else cpu.react = 0
     return stand()
@@ -91,28 +150,42 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
 
   const dist = Math.abs(other.x - me.x)
   const I = me.def.id
-  cpu.cool = 16 + Math.floor(rand() * 22)
+  cpu.cool = tune.coolMin + Math.floor(rand() * tune.coolRange)
 
-  if (airborne(other) && dist < 90 && I === 'bob' && grounded(me)) {
-    pushMotion(cpu.plan, [6, 2, 3], rand() < 0.5 ? 'hp' : 'lp', me.facing)
-    return stand()
+  if (airborne(other) && dist < 90 && grounded(me)) {
+    if (I === 'cyber') {
+      pushMotion(cpu.plan, [2, 3, 6], rand() < 0.5 ? 'hk' : 'lk', me.facing)
+      return stand()
+    }
+    if (I === 'bob') {
+      pushMotion(cpu.plan, [6, 2, 3], rand() < 0.5 ? 'hp' : 'lp', me.facing)
+      return stand()
+    }
+    if (hard) {
+      if (I === 'ninja' || I === 'soldier') {
+        pushMotion(cpu.plan, [2, 3, 6], rand() < 0.5 ? 'hp' : 'lp', me.facing)
+      } else {
+        cpu.plan.push({ ticks: 10, dir: 8 })
+        cpu.plan.push({ ticks: 6, dir: 5, hk: true })
+      }
+      return stand()
+    }
   }
 
-  if (otherAtk && dist < 110) {
-    cpu.cool = 10
+  if (otherAtk && dist < tune.blockRange) {
+    cpu.cool = tune.reactFrames + 2
     return holdGuard(me, other)
   }
 
+  if (I === 'cyber' && planCyber(cpu, me, dist, hard)) return stand()
+
   if (dist > 160) {
     const r = rand()
-    if (I === 'ninja' && r < 0.4) pushMotion(cpu.plan, [2, 3, 6], r < 0.15 ? 'hp' : 'lp', me.facing)
-    else if (I === 'cyber' && me.buffer.chargeBack < 40 && r < 0.5) {
-      cpu.plan.push({ ticks: 28, dir: away(me) })
-    } else if (I === 'cyber' && me.buffer.chargeBack >= 40 && r < 0.55) {
-      cpu.plan.push({ ticks: 3, dir: toward(me), hp: true })
-    } else if (I === 'bob' && r < 0.2) {
+    if (I === 'ninja' && r < 0.4 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.15 * sp ? 'hp' : 'lp', me.facing)
+    else if (I === 'soldier' && r < 0.45 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.18 * sp ? 'hp' : 'lp', me.facing)
+    else if (I === 'bob' && r < 0.2 * sp) {
       pushMotion(cpu.plan, [2, 3, 6], 'lp', me.facing)
-    } else if (r < 0.75) {
+    } else if (r < (hard ? 0.9 : 0.75)) {
       cpu.plan.push({ ticks: 14 + Math.floor(rand() * 12), dir: toward(me) })
     }
     return stand()
@@ -120,20 +193,20 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
 
   if (dist > 72) {
     const r = rand()
-    if (r < 0.18 && I === 'ninja') pushMotion(cpu.plan, [2, 1, 4], rand() < 0.5 ? 'hk' : 'lk', me.facing)
-    else if (r < 0.4) cpu.plan.push({ ticks: 2, dir: 5, lp: r < 0.28, lk: r >= 0.28 })
-    else if (r < 0.5) {
+    if (r < 0.18 * sp && I === 'ninja') pushMotion(cpu.plan, [2, 1, 4], rand() < 0.5 ? 'hk' : 'lk', me.facing)
+    else if (r < (hard ? 0.32 : 0.4)) cpu.plan.push({ ticks: 2, dir: 5, lp: r < 0.28, lk: r >= 0.28 })
+    else if (r < (hard ? 0.48 : 0.5)) {
       cpu.plan.push({ ticks: 12, dir: 8 })
       cpu.plan.push({ ticks: 6, dir: 5, hk: true })
-    } else if (r < 0.72) cpu.plan.push({ ticks: 10, dir: toward(me) })
+    } else if (r < (hard ? 0.88 : 0.72)) cpu.plan.push({ ticks: 10, dir: toward(me) })
     return stand()
   }
 
   const r = rand()
-  if (r < 0.1) cpu.plan.push({ ticks: 2, dir: 5, lp: true, lk: true })
-  else if (r < 0.28) cpu.plan.push({ ticks: 8, dir: away(me) })
-  else if (r < 0.4 && I === 'cyber') pushMotion(cpu.plan, [2, 3, 6], 'hk', me.facing)
-  else if (r < 0.62) {
+  if (r < (hard ? 0.18 : 0.1)) cpu.plan.push({ ticks: 2, dir: 5, lp: true, lk: true })
+  else if (r < (hard ? 0.24 : 0.28) && I !== 'cyber') cpu.plan.push({ ticks: 8, dir: away(me) })
+  else if (r < 0.4 * sp && (I === 'cyber' || I === 'soldier')) pushMotion(cpu.plan, [2, 3, 6], 'hk', me.facing)
+  else if (r < (hard ? 0.72 : 0.62)) {
     cpu.plan.push({ ticks: 2, dir: 2, hk: r < 0.5, lp: r >= 0.5 })
   } else if (r < 0.85) {
     cpu.plan.push({ ticks: 2, dir: 5, hp: r > 0.75, lp: r <= 0.75 && r > 0.68, hk: r <= 0.68 })

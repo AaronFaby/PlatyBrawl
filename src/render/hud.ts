@@ -16,9 +16,10 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
   ctx.fillText(p2Name, LOGICAL_W - 26, 38)
   if (session.p2Cpu) {
     const nameW = ctx.measureText(p2Name).width
+    const hard = session.cpuDifficulty === 'hard'
     ctx.font = `6px ${FONT}`
-    ctx.fillStyle = '#9ad0ff'
-    ctx.fillText('CPU', LOGICAL_W - 26 - nameW - 6, 37)
+    ctx.fillStyle = hard ? '#ff8a4a' : '#9ad0ff'
+    ctx.fillText(hard ? 'HARD' : 'CPU', LOGICAL_W - 26 - nameW - 6, 37)
     ctx.font = `8px ${FONT}`
   }
 
@@ -118,6 +119,14 @@ export function drawProjectiles(ctx: CanvasRenderingContext2D, world: FightWorld
       ctx.fillStyle = '#1a1010'
       ctx.fillRect(-1, -1, 2, 2)
       ctx.restore()
+    } else if (p.kind === 'bullet') {
+      ctx.save()
+      ctx.translate(p.x - camX, p.y)
+      ctx.fillStyle = '#ffe27a'
+      ctx.fillRect(p.facing === 1 ? -8 : -4, -1, 12, 3)
+      ctx.fillStyle = '#fff4c8'
+      ctx.fillRect(p.facing === 1 ? -2 : -2, -2, 5, 5)
+      ctx.restore()
     } else {
       const x = p.facing === 1 ? p.x - camX : p.x - camX - p.w
       const grd = ctx.createLinearGradient(x, 0, x + p.w, 0)
@@ -152,7 +161,14 @@ export function drawMovesOverlay(ctx: CanvasRenderingContext2D, world: FightWorl
   ctx.fillText('MOVESET', LOGICAL_W / 2, 34)
 
   drawMovesCard(ctx, world.fighters[0].charId, 16, 46, '#ff4d8d', 'P1')
-  drawMovesCard(ctx, world.fighters[1].charId, 248, 46, '#3dc8ff', world.session.p2Cpu ? 'CPU' : 'P2')
+  drawMovesCard(
+    ctx,
+    world.fighters[1].charId,
+    248,
+    46,
+    '#3dc8ff',
+    world.session.p2Cpu ? (world.session.cpuDifficulty === 'hard' ? 'HARD' : 'CPU') : 'P2',
+  )
 
   ctx.textAlign = 'center'
   ctx.font = `6px ${FONT}`

@@ -19,7 +19,7 @@ export const MOTION_WINDOW = 12
 export const FONT = '"Press Start 2P", monospace'
 export const VERSION = '0.1.0'
 
-export const CHAR_IDS = ['bob', 'ninja', 'cyber'] as const
+export const CHAR_IDS = ['bob', 'ninja', 'cyber', 'soldier'] as const
 export type CharId = (typeof CHAR_IDS)[number]
 
 export const CHAR_META: Record<
@@ -43,5 +43,11 @@ export const CHAR_META: Record<
     short: 'CYBER',
     subtitle: 'ZONER',
     color: '#5ad6e8',
+  },
+  soldier: {
+    name: 'SOLDIER PLATY',
+    short: 'SOLDIER',
+    subtitle: 'GUNNER',
+    color: '#4a6b3a',
   },
 }

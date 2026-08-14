@@ -125,6 +125,18 @@ describe('match sim', () => {
     expect(world.match.projectiles.some((p) => p.kind === 'shuriken')).toBe(true)
   })
 
+  it('Soldier QCF+P fires a pistol bullet', () => {
+    const world = createMatch({ p1: 'soldier', p2: 'bob', p2Cpu: true })
+    skip(world, 120)
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 16)
+    expect(world.match.projectiles.some((p) => p.kind === 'bullet')).toBe(true)
+  })
+
   it('Cyber charge then forward+P fires a beam', () => {
     const world = createMatch({ p1: 'cyber', p2: 'bob', p2Cpu: true })
     skip(world, 120)

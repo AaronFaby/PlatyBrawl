@@ -21,7 +21,7 @@ export type SpriteBank = {
 }
 
 export const bank: SpriteBank = {
-  chars: { bob: {}, ninja: {}, cyber: {} },
+  chars: Object.fromEntries(CHAR_IDS.map((id) => [id, {}])) as SpriteBank['chars'],
   stages: {},
   ready: false,
 }

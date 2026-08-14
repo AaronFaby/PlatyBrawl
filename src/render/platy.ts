@@ -84,6 +84,13 @@ function poseFrom(f: Fighter, cell: number): Pose {
     p.kick = cell >= 1 ? 1.3 : 0
     p.lean = 0.5
   }
+  if (f.moveId?.startsWith('pistol')) {
+    p.arm = cell >= 1 ? 1.2 : -0.3
+  }
+  if (f.moveId?.startsWith('combatRush')) {
+    p.arm = cell >= 1 ? 1.1 : -0.4
+    p.lean = 0.5
+  }
   if (f.charId === 'ninja') p.sword = p.arm > 0.5 ? 1.1 : 0.4
   return p
 }
@@ -132,6 +139,7 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
 
   if (id === 'ninja') drawGi(ctx, bodyY, bodyH)
   if (id === 'cyber') drawCyber(ctx, bodyY)
+  if (id === 'soldier') drawSoldier(ctx, bodyY)
 
   // arm
   ctx.fillStyle = id === 'cyber' ? '#8aa0b0' : bodyColor(id)
@@ -227,9 +235,21 @@ function drawCyber(ctx: CanvasRenderingContext2D, bodyY: number): void {
   ctx.fillRect(-4, bodyY + 8, 6, 8)
 }
 
+function drawSoldier(ctx: CanvasRenderingContext2D, bodyY: number): void {
+  ctx.fillStyle = '#4a5c32'
+  ctx.beginPath()
+  ctx.ellipse(6, bodyY - 20, 12, 5, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#3a4a28'
+  ctx.fillRect(-2, bodyY - 4, 16, 12)
+  ctx.fillStyle = '#5a3a20'
+  ctx.fillRect(-6, bodyY + 6, 5, 8)
+}
+
 function bodyColor(id: CharId): string {
   if (id === 'ninja') return '#7a4a28'
   if (id === 'cyber') return '#e6d2a8'
+  if (id === 'soldier') return '#c8b080'
   return '#f0d8a8'
 }
 
@@ -241,11 +261,13 @@ function billColor(id: CharId): string {
 function tailColor(id: CharId): string {
   if (id === 'cyber') return '#6a7a88'
   if (id === 'ninja') return '#4a2a18'
+  if (id === 'soldier') return '#3a2a18'
   return '#1a1210'
 }
 
 function footColor(id: CharId): string {
   if (id === 'cyber') return '#8aa0b0'
   if (id === 'ninja') return '#1a1010'
+  if (id === 'soldier') return '#2a2418'
   return '#1a1210'
 }

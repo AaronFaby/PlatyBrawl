@@ -10,7 +10,7 @@ export type AnimFlags = {
   invuln?: boolean
   invulnHead?: boolean
   armorHits?: number
-  projectile?: 'shuriken' | 'beam'
+  projectile?: 'shuriken' | 'beam' | 'bullet'
   teleport?: 'front' | 'behind'
 }
 
@@ -120,7 +120,7 @@ export type Fighter = {
 
 export type Projectile = {
   owner: PlayerId
-  kind: 'shuriken' | 'beam'
+  kind: 'shuriken' | 'beam' | 'bullet'
   x: number
   y: number
   vx: number
@@ -157,8 +157,11 @@ export type MatchState = {
   stageId: StageId
 }
 
+export type CpuDifficulty = 'normal' | 'hard'
+
 export type Session = {
   p1: CharId
   p2: CharId
   p2Cpu: boolean
+  cpuDifficulty?: CpuDifficulty
 }

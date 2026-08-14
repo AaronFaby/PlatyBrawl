@@ -27,7 +27,7 @@ export type FightHooks = {
   frame: number
   other: Fighter
   match: MatchState
-  spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam', heavy: boolean) => void
+  spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean) => void
 }
 
 export function createFighter(id: PlayerId, charId: CharId, x: number, facing: Facing): Fighter {

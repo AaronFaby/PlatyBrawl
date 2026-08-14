@@ -30,7 +30,12 @@ export function versusScene(game: Game): Scene {
       ctx.font = `8px ${FONT}`
       ctx.fillStyle = '#c8b8d8'
       ctx.fillText(p1.subtitle, 130, 96)
-      ctx.fillText(game.session.p2Cpu ? 'CPU ' + p2.subtitle : p2.subtitle, 350, 96)
+      const cpuTag = game.session.p2Cpu
+        ? game.session.cpuDifficulty === 'hard'
+          ? 'HARD '
+          : 'CPU '
+        : ''
+      ctx.fillText(cpuTag + p2.subtitle, 350, 96)
 
       const port1 = getPortrait(game.session.p1)
       const port2 = getPortrait(game.session.p2)

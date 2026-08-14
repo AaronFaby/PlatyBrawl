@@ -30,6 +30,6 @@ export type Game = {
   switchTo: (id: SceneId, data?: unknown) => void
 }
 
-export const DEFAULT_SESSION: Session = { p1: 'bob', p2: 'ninja', p2Cpu: true }
+export const DEFAULT_SESSION: Session = { p1: 'bob', p2: 'ninja', p2Cpu: true, cpuDifficulty: 'normal' }
 
-export const ROSTER_ORDER: CharId[] = ['bob', 'ninja', 'cyber']
+export const ROSTER_ORDER: CharId[] = ['bob', 'ninja', 'cyber', 'soldier']

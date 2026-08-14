@@ -80,6 +80,12 @@ export function sfxSpecial(): void {
   tone('square', 480, 0.1, 0.18, 160, 0.03)
 }
 
+export function sfxGun(): void {
+  noiseHit(0.07, 0.52, 350)
+  tone('square', 220, 0.07, 0.4, 48)
+  tone('triangle', 80, 0.05, 0.28, 36)
+}
+
 export function sfxKo(): void {
   duckMusic(0.8)
   ;[midi(57), midi(53), midi(50), midi(45)].forEach((f, i) => {

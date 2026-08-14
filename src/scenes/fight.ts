@@ -2,7 +2,7 @@ import { LOGICAL_H, LOGICAL_W } from '../config.ts'
 import { createCpu, resetCpu, tickCpu } from '../ai/cpu.ts'
 import { clearKeys } from '../input/devices.ts'
 import { emptyInput } from '../input/virtual.ts'
-import { sfxBlock, sfxFight, sfxHit, sfxJump, sfxKo, sfxSpecial, sfxWhoosh } from '../audio/sfx.ts'
+import { sfxBlock, sfxFight, sfxGun, sfxHit, sfxJump, sfxKo, sfxSpecial, sfxWhoosh } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { createMatch, tickMatch, type FightWorld } from '../fight/match.ts'
 import { createCam, updateCam } from '../render/camera.ts'
@@ -27,7 +27,7 @@ export function fightScene(game: Game): Scene {
       world = createMatch(game.session)
       game.world = world
       game.cam = createCam()
-      game.cpu = createCpu()
+      game.cpu = createCpu(game.session.cpuDifficulty ?? 'normal')
       resetCpu(game.cpu)
       clearKeys(game.devices)
       game.p1 = emptyInput()
@@ -68,7 +68,11 @@ export function fightScene(game: Game): Scene {
       if (world.match.announce === 'FIGHT' && lastAnnounce !== 'FIGHT') sfxFight()
       if (world.match.announce === 'K.O.' && lastAnnounce !== 'K.O.') sfxKo()
       lastAnnounce = world.match.announce
-      if (world.match.projectiles.length > lastProj) sfxWhoosh()
+      if (world.match.projectiles.length > lastProj) {
+        const newest = world.match.projectiles[world.match.projectiles.length - 1]
+        if (newest?.kind === 'bullet') sfxGun()
+        else sfxWhoosh()
+      }
       lastProj = world.match.projectiles.length
 
       if (world.match.phase === 'over') {

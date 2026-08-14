@@ -1,9 +1,10 @@
 import { FONT, LOGICAL_H, LOGICAL_W, VERSION } from '../config.ts'
+import type { CharId } from '../config.ts'
 import { ac, isMuted, sfxStart } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { drawControlCard } from '../render/hud.ts'
 import { bank } from '../render/sprite.ts'
-import type { Game, Scene } from './context.ts'
+import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
 
 export function titleScene(game: Game): Scene {
   let flash = 0
@@ -66,9 +67,9 @@ export function titleScene(game: Game): Scene {
       ctx.fillStyle = '#ff3d7f'
       ctx.fillText('BRAWL', LOGICAL_W / 2, 126)
 
-      drawTitleFighter(ctx, 'bob', 140, 196)
-      drawTitleFighter(ctx, 'ninja', 240, 196)
-      drawTitleFighter(ctx, 'cyber', 340, 196)
+      const spacing = 90
+      const startX = LOGICAL_W / 2 - ((ROSTER_ORDER.length - 1) * spacing) / 2
+      ROSTER_ORDER.forEach((id, i) => drawTitleFighter(ctx, id, startX + i * spacing, 196))
 
       ctx.font = `10px ${FONT}`
       ctx.globalAlpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(flash * 0.12))
@@ -92,7 +93,7 @@ export function titleScene(game: Game): Scene {
   }
 }
 
-function drawTitleFighter(ctx: CanvasRenderingContext2D, id: 'bob' | 'ninja' | 'cyber', x: number, y: number): void {
+function drawTitleFighter(ctx: CanvasRenderingContext2D, id: CharId, x: number, y: number): void {
   const img = bank.chars[id].idle
   ctx.save()
   ctx.translate(x, y)

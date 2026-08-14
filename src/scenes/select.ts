@@ -16,6 +16,7 @@ export function selectScene(game: Game): Scene {
   let p2Human = false
   let prev1 = 5
   let prev2 = 5
+  let prevV = 5
   let hold1 = 0
   let hold2 = 0
 
@@ -31,8 +32,10 @@ export function selectScene(game: Game): Scene {
       p2Human = !game.session.p2Cpu
       prev1 = 5
       prev2 = 5
+      prevV = 5
       hold1 = 0
       hold2 = 0
+      if (!game.session.cpuDifficulty) game.session.cpuDifficulty = 'normal'
       ensureBgm('title')
     },
     exit() {},
@@ -45,11 +48,17 @@ export function selectScene(game: Game): Scene {
       if (!lock1 && h1) {
         hold1 += 1
         if (prev1 === 5 || hold1 % 16 === 0) {
-          c1 = (c1 + h1 + 3) % 3
+          c1 = (c1 + h1 + ROSTER_ORDER.length) % ROSTER_ORDER.length
           sfxSelect()
         }
       } else hold1 = 0
       prev1 = h1 ? d1 : 5
+      const v1 = d1 === 8 || d1 === 2 ? d1 : 5
+      if (!lock1 && !p2Human && v1 !== 5 && prevV === 5) {
+        game.session.cpuDifficulty = game.session.cpuDifficulty === 'hard' ? 'normal' : 'hard'
+        sfxSelect()
+      }
+      prevV = v1
       if (!lock1 && p2WantsJoin(game.devices)) {
         p2Human = true
       }
@@ -57,7 +66,7 @@ export function selectScene(game: Game): Scene {
       if (p2Human && !lock2 && h2) {
         hold2 += 1
         if (prev2 === 5 || hold2 % 16 === 0) {
-          c2 = (c2 + h2 + 3) % 3
+          c2 = (c2 + h2 + ROSTER_ORDER.length) % ROSTER_ORDER.length
           sfxSelect()
         }
       } else hold2 = 0
@@ -92,8 +101,12 @@ export function selectScene(game: Game): Scene {
       ctx.textAlign = 'center'
       ctx.fillText('SELECT YOUR PLATY', LOGICAL_W / 2, 24)
 
+      const n = ROSTER_ORDER.length
+      const cardW = 100
+      const gap = 12
+      const startX = Math.floor((LOGICAL_W - (n * cardW + (n - 1) * gap)) / 2)
       ROSTER_ORDER.forEach((id, i) => {
-        const x = 70 + i * 120
+        const x = startX + i * (cardW + gap)
         const y = 70
         drawCard(ctx, id, x, y, {
           p1: i === c1,
@@ -107,13 +120,14 @@ export function selectScene(game: Game): Scene {
       ctx.font = `7px ${FONT}`
       ctx.fillStyle = '#ff8aa8'
       ctx.fillText(lock1 ? 'P1 LOCKED' : 'P1  A/D  PICK YOU   U LOCK', LOGICAL_W / 2, 230)
-      ctx.fillStyle = '#8ad4ff'
+      const cpuHard = game.session.cpuDifficulty === 'hard'
+      ctx.fillStyle = p2Human ? '#8ad4ff' : cpuHard ? '#ff8a4a' : '#8ad4ff'
       ctx.fillText(
         p2Human
           ? lock2
             ? 'P2 LOCKED'
             : 'P2  ARROWS  PICK   O LOCK'
-          : 'CPU  LOCKS A RANDOM FOE   O = HUMAN P2',
+          : `CPU  ${cpuHard ? 'HARD' : 'NORMAL'}   W/S DIFF   O = HUMAN P2`,
         LOGICAL_W / 2,
         244,
       )
