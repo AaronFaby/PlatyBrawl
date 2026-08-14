@@ -6,6 +6,8 @@ import { drawControlCard } from '../render/hud.ts'
 import { bank } from '../render/sprite.ts'
 import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
 
+const TITLE_FIGHTER_H = 50
+
 export function titleScene(game: Game): Scene {
   let flash = 0
   return {
@@ -93,17 +95,62 @@ export function titleScene(game: Game): Scene {
   }
 }
 
+type SrcRect = { x: number; y: number; w: number; h: number }
+const opaqueCache = new WeakMap<HTMLImageElement, SrcRect>()
+
+function opaqueRect(img: HTMLImageElement): SrcRect {
+  const hit = opaqueCache.get(img)
+  if (hit) return hit
+  const w = img.naturalWidth || img.width
+  const h = img.naturalHeight || img.height
+  const fallback = { x: 0, y: 0, w, h }
+  let rect = fallback
+  try {
+    const scratch = document.createElement('canvas')
+    scratch.width = w
+    scratch.height = h
+    const g = scratch.getContext('2d')
+    if (g) {
+      g.drawImage(img, 0, 0)
+      const pix = g.getImageData(0, 0, w, h).data
+      let x0 = w
+      let y0 = h
+      let x1 = 0
+      let y1 = 0
+      for (let y = 0; y < h; y++) {
+        const row = y * w * 4
+        for (let x = 0; x < w; x++) {
+          if (pix[row + x * 4 + 3] < 12) continue
+          if (x < x0) x0 = x
+          if (y < y0) y0 = y
+          if (x > x1) x1 = x
+          if (y > y1) y1 = y
+        }
+      }
+      if (x1 >= x0) rect = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }
+    }
+  } catch {
+    rect = fallback
+  }
+  opaqueCache.set(img, rect)
+  return rect
+}
+
 function drawTitleFighter(ctx: CanvasRenderingContext2D, id: CharId, x: number, y: number): void {
   const img = bank.chars[id].idle
   ctx.save()
   ctx.translate(x, y)
+  const src = img ? opaqueRect(img) : { x: 0, y: 0, w: 56, h: TITLE_FIGHTER_H }
+  const scale = TITLE_FIGHTER_H / src.h
+  const dw = Math.round(src.w * scale)
+  const dh = TITLE_FIGHTER_H
   ctx.fillStyle = 'rgba(0,0,0,0.35)'
   ctx.beginPath()
-  ctx.ellipse(0, 4, 18, 4, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 4, Math.max(16, Math.round(dw * 0.32)), 4, 0, 0, Math.PI * 2)
   ctx.fill()
   if (img) {
     ctx.imageSmoothingEnabled = false
-    ctx.drawImage(img, -28, -54, 56, 56)
+    ctx.drawImage(img, src.x, src.y, src.w, src.h, -Math.floor(dw / 2), -dh, dw, dh)
   }
   ctx.restore()
 }
