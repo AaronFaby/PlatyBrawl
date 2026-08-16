@@ -48,6 +48,20 @@ export function isMuted(): boolean {
   return muted
 }
 
+/** Open the music bus so a sample is audible even if mute is on. */
+export function hearMusic(): void {
+  ac()
+  if (!musicBus || !ctx) return
+  musicBus.gain.cancelScheduledValues(ctx.currentTime)
+  musicBus.gain.setTargetAtTime(MUSIC_GAIN, ctx.currentTime, 0.03)
+}
+
+export function applyMusicGain(): void {
+  if (!musicBus || !ctx) return
+  musicBus.gain.cancelScheduledValues(ctx.currentTime)
+  musicBus.gain.setTargetAtTime(muted ? 0 : MUSIC_GAIN, ctx.currentTime, 0.04)
+}
+
 export function setMuted(on: boolean): void {
   muted = on
   try {
@@ -55,10 +69,7 @@ export function setMuted(on: boolean): void {
   } catch {
     // Storage can be unavailable in private contexts; muting should still work.
   }
-  if (musicBus && ctx) {
-    musicBus.gain.cancelScheduledValues(ctx.currentTime)
-    musicBus.gain.setTargetAtTime(on ? 0 : MUSIC_GAIN, ctx.currentTime, 0.04)
-  }
+  applyMusicGain()
 }
 
 export function toggleMute(): boolean {

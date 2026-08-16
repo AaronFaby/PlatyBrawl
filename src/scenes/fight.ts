@@ -4,6 +4,7 @@ import { clearKeys } from '../input/devices.ts'
 import { emptyInput } from '../input/virtual.ts'
 import { sfxBlock, sfxFight, sfxGun, sfxHit, sfxJump, sfxKo, sfxSpecial, sfxWhoosh } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
+import { fightTrack } from '../data/themes.ts'
 import { createMatch, tickMatch, type FightWorld } from '../fight/match.ts'
 import { createCam, updateCam } from '../render/camera.ts'
 import { drawDebug } from '../render/debug.ts'
@@ -38,7 +39,7 @@ export function fightScene(game: Game): Scene {
       lastStatus = ['idle', 'idle']
       paused = false
       helpHeld = false
-      ensureBgm('fight')
+      ensureBgm(fightTrack(game.session))
     },
     exit() {},
     update() {

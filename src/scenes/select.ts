@@ -90,7 +90,7 @@ export function selectScene(game: Game): Scene {
         game.session.p1 = ROSTER_ORDER[c1]
         game.session.p2 = ROSTER_ORDER[c2]
         game.session.p2Cpu = !p2Human
-        game.switchTo('versus')
+        game.switchTo('arena')
       }
     },
     draw(ctx) {

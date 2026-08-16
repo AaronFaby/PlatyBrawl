@@ -1,5 +1,5 @@
 import type { CharId } from '../config.ts'
-import type { StageId } from '../data/stages.ts'
+import type { StageId, StagePick } from '../data/stages.ts'
 
 export type PlayerId = 0 | 1
 export type Facing = 1 | -1
@@ -170,4 +170,6 @@ export type Session = {
   p2: CharId
   p2Cpu: boolean
   cpuDifficulty?: CpuDifficulty
+  stageId?: StagePick
+  bgmId?: CharId
 }

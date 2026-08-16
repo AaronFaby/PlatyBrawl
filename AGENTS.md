@@ -27,26 +27,27 @@ Node.js 22+ (or current LTS). `npm run build` typechecks; `tsconfig.json` uses b
 src/main.ts          boot, scene table, input pump
 src/loop.ts          fixed-step accumulator + rAF draw
 src/config.ts        resolution, HP, timer, CHAR_IDS, CHAR_META
-src/scenes/          title → select → versus → fight → result
+src/scenes/          title → select → arena → versus → fight → result
 src/fight/           fighters, boxes, combat, physics, projectiles, match
 src/input/           keyboard + pads, motion / charge buffer
 src/data/characters/ per-fighter frame data and specials
 src/data/moves.ts    select lines + pause overlay text
 src/data/roster.ts   getChar, pickCpuOpponent
+src/data/themes.ts   fight theme ids + names
 src/ai/cpu.ts        CPU brain (normal / hard)
 src/render/          sprites, stage, HUD, camera, fallback stick figures
-src/audio/           Web Audio SFX + chip BGM
+src/audio/           Web Audio SFX + chip BGM (title, win, one track per CharId)
 public/sprites/<id>/ pose PNGs
-public/stage/        billabong, dojo, neonlab
+public/stage/        one home stage per fighter (960×540 jpg)
 ```
 
 **Sim versus view.** `startLoop` runs `step()` at 60 Hz and draws every animation frame. Match logic, hitboxes, and CPU plans belong in the sim. Drawing reads fighter state; it must not write gameplay state.
 
-**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`.
+**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty?, stageId?, bgmId? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session, including stage and music. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`. `stageId` may be `'random'` or a `StageId`. Random (or a missing value) picks one stage in `createMatch` and keeps it for every round of that match. Rematch with Random may pick a different stage. `bgmId` is a `CharId`; a missing value uses P1's theme. Preview and fight BGM must respect mute (`isMuted()` / the music bus). Do not call `setMuted(false)` or `hearMusic()` to start a match. Start the fight theme in versus; fight enter should `ensureBgm` only so the track is not restarted.
 
 **Roster IDs.** `CHAR_IDS` in `src/config.ts` is the source of the `CharId` union. `ROSTER_ORDER` in `src/scenes/context.ts` is select/title order. Keep both in sync. Select wrap uses `ROSTER_ORDER.length`, not a hardcoded three.
 
-**Scenes.** Each scene is `{ id, enter, exit, update, draw }`. `game.switchTo(id)` exits the current scene and enters the next. Fight creates a new `FightWorld` on enter. Result receives `{ winner, world }`.
+**Scenes.** Each scene is `{ id, enter, exit, update, draw }`. `game.switchTo(id)` exits the current scene and enters the next. Select goes to **arena** (stage + music). Arena defaults both cursors to Random and starts on the music column. Highlighting a music row calls `previewBgm` (respects mute). Versus calls `startFightBgm` once. Fight enter calls `ensureBgm` only so the track is not restarted. `drawMusicStatus` in `src/render/hud.ts` is painted from `main.ts` after every scene. Fight creates a new `FightWorld` on enter. Result receives `{ winner, world }`.
 
 ## Add a character
 
@@ -59,9 +60,11 @@ Touch every layer. A missing one compiles in isolation and fails in play.
 5. **Projectiles** — If the special fires a shot, add a kind to `AnimFlags.projectile`, `Projectile.kind`, `spawnFrom`, `FightHooks.spawnProjectile`, and `drawProjectiles`. Measure muzzle offset in sprite space (origin 80, 156, scale 0.7); do not reuse torso-height defaults.
 6. **CPU** — Teach `src/ai/cpu.ts` only motions that fighter defines. Do not queue Bob's DP (`[6, 2, 3]+P`) for anyone else. Charge specials must be one plan (hold back for `CHARGE_FRAMES +` a few ticks, then forward + button) so cooldown cannot dump the charge.
 7. **Fallback draw** — `src/render/platy.ts` still draws if a sprite is missing. Add colors / props for the new id.
-8. **Tests** — At least one sim test for a signature special, plus roster coverage. `pickCpuOpponent` must never return P1's id.
+8. **Home stage** — New file `public/stage/<id>.jpg` at 960×540. Add the id to `STAGE_IDS` and `STAGE_META` in `src/data/stages.ts`, map it in `CHAR_STAGE`, and add a ground palette in `src/render/stage.ts`. Arena lists `STAGE_IDS` automatically.
+9. **Theme song** — Add a unique 90s-chip fight track keyed by the new `CharId` in `src/audio/bgm.ts` (`BPM`, `kitFor`, and a `pattern*` groove). Do not reuse Bob's arcade hook. Title and win stay shared. Arena lists `ROSTER_ORDER` as themes automatically.
+10. **Tests** — At least one sim test for a signature special, plus roster coverage. `pickCpuOpponent` must never return P1's id. `CHAR_STAGE` must include the new id.
 
-Select and title iterate `ROSTER_ORDER` / `CHAR_IDS`. Sprite load iterates `CHAR_IDS` and `POSES`. You do not hand-edit the sprite bank object.
+Select and title iterate `ROSTER_ORDER` / `CHAR_IDS`. Sprite load iterates `CHAR_IDS` and `POSES`. Stage load iterates `STAGE_IDS`. You do not hand-edit the sprite bank object.
 
 ## Sprites
 

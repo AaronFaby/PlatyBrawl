@@ -207,16 +207,25 @@ describe('match sim', () => {
     expect(world.match.phase).toBe('over')
   })
 
-  it('picks a stage and swaps it on the next round', () => {
-    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+  it('keeps a pinned stage across rounds', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false, stageId: 'armybase' })
+    expect(world.match.stageId).toBe('armybase')
+    skip(world, 120)
+    world.fighters[1].hp = 0
+    skip(world, 180)
+    expect(world.match.round).toBe(2)
+    expect(world.match.stageId).toBe('armybase')
+  })
+
+  it('keeps a random stage for every round of the match', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false, stageId: 'random' })
     expect(STAGE_IDS).toContain(world.match.stageId)
     const first = world.match.stageId
     skip(world, 120)
     world.fighters[1].hp = 0
     skip(world, 180)
     expect(world.match.round).toBe(2)
-    expect(world.match.stageId).not.toBe(first)
-    expect(STAGE_IDS).toContain(world.match.stageId)
+    expect(world.match.stageId).toBe(first)
   })
 
   it('first to two KOs ends the match', () => {

@@ -1,5 +1,5 @@
 import { GROUND_Y, MAX_HP, ROUND_SECONDS, WINS_NEEDED } from '../config.ts'
-import { pickStage } from '../data/stages.ts'
+import { stageForSession } from '../data/stages.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 import { clashProjectiles, spawnFrom, tickProjectiles } from './projectile.ts'
 import { resolveProjectiles, resolveStrikes } from './combat.ts'
@@ -29,11 +29,11 @@ export function createMatch(session: Session): FightWorld {
     session,
     fighters,
     frame: 0,
-    match: freshMatch(),
+    match: freshMatch(session),
   }
 }
 
-function freshMatch(): MatchState {
+function freshMatch(session: Session): MatchState {
   return {
     phase: 'intro',
     phaseTicks: 0,
@@ -48,7 +48,7 @@ function freshMatch(): MatchState {
     announce: 'ROUND 1',
     winner: null,
     timeout: false,
-    stageId: pickStage(),
+    stageId: stageForSession(session.stageId),
   }
 }
 
@@ -66,7 +66,6 @@ function startRound(world: FightWorld, round: number): void {
   world.match.projectiles = []
   world.match.announce = `ROUND ${round}`
   world.match.timeout = false
-  world.match.stageId = pickStage(world.match.stageId)
   world.fighters[0].hp = MAX_HP
   world.fighters[1].hp = MAX_HP
 }

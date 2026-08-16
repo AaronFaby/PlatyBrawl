@@ -1,4 +1,5 @@
 import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W, MAX_HP, WINS_NEEDED } from '../config.ts'
+import { isMuted } from '../audio/engine.ts'
 import { MOVESET } from '../data/moves.ts'
 import type { FightWorld } from '../fight/match.ts'
 
@@ -52,6 +53,16 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
   ctx.fillStyle = '#6a5068'
   ctx.textAlign = 'left'
   ctx.fillText('H MOVES', 8, LOGICAL_H - 6)
+}
+
+export function drawMusicStatus(ctx: CanvasRenderingContext2D): void {
+  const on = !isMuted()
+  ctx.save()
+  ctx.textAlign = 'right'
+  ctx.font = `5px ${FONT}`
+  ctx.fillStyle = on ? '#8ad4a0' : '#6a5068'
+  ctx.fillText(on ? 'MUSIC: ON' : 'MUSIC: OFF', LOGICAL_W - 6, LOGICAL_H - 6)
+  ctx.restore()
 }
 
 function drawBar(
@@ -164,7 +175,7 @@ export function drawControlCard(ctx: CanvasRenderingContext2D, y: number): void 
   ctx.fillStyle = '#c8b8d8'
   ctx.fillText('P1  WASD  U/I PUNCH  J/K KICK', LOGICAL_W / 2, y)
   ctx.fillText('P2  ARROWS  O/P PUNCH  L/; KICK', LOGICAL_W / 2, y + 10)
-  ctx.fillText('SPECIALS  QC+BTN   DP+P   CHARGE B+F+P', LOGICAL_W / 2, y + 20)
+  ctx.fillText('AFTER SELECT  STAGE + MUSIC   RANDOM DEFAULT', LOGICAL_W / 2, y + 20)
   ctx.fillText('IN FIGHT  H  PAUSE + MOVES', LOGICAL_W / 2, y + 30)
 }
 

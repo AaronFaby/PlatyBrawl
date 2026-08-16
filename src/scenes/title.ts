@@ -1,6 +1,6 @@
 import { FONT, LOGICAL_H, LOGICAL_W, VERSION } from '../config.ts'
 import type { CharId } from '../config.ts'
-import { ac, isMuted, sfxStart } from '../audio/sfx.ts'
+import { ac, sfxStart } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { drawControlCard } from '../render/hud.ts'
 import { bank } from '../render/sprite.ts'
@@ -82,7 +82,7 @@ export function titleScene(game: Game): Scene {
       drawControlCard(ctx, 224)
       ctx.fillStyle = '#6a5068'
       ctx.font = `6px ${FONT}`
-      ctx.fillText(`FIRST TO 2   LOCAL + CPU   M ${isMuted() ? 'MUSIC OFF' : 'MUSIC ON'}`, LOGICAL_W / 2, 266)
+      ctx.fillText('FIRST TO 2   LOCAL + CPU   M TOGGLE', LOGICAL_W / 2, 266)
 
       ctx.save()
       ctx.textAlign = 'right'

@@ -7,7 +7,7 @@ import type { VirtualInput } from '../input/virtual.ts'
 import type { Cam } from '../render/camera.ts'
 import type { View } from '../render/canvas.ts'
 
-export type SceneId = 'title' | 'select' | 'versus' | 'fight' | 'result'
+export type SceneId = 'title' | 'select' | 'arena' | 'versus' | 'fight' | 'result'
 
 export type Scene = {
   id: SceneId

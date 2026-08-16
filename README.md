@@ -1,6 +1,6 @@
 # Platy Brawl
 
-A 90s arcade-style 2D fighting game. Five platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → VS → fight → rematch.
+A 90s arcade-style 2D fighting game. Five platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → stage/music → VS → fight → rematch.
 
 Play it: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com)
 
@@ -12,9 +12,10 @@ If you are changing code, read [AGENTS.md](AGENTS.md).
 
 1. **Title** — Press Enter, Space, or a punch to start.
 2. **Select** — P1 picks a platy with A/D and locks with U (or I / J / K). W/S sets CPU Normal or Hard.
-3. **VS** — A short intro, then the match.
-4. **Fight** — Best of three (first to two rounds). Each round is 99 seconds.
-5. **Result** — Rematch or back out with Start / punch.
+3. **Stage / music** — Random is already selected. You start on the music list. **W/S** highlights a song and plays a sample (silent if music is off). **A/D** switches to the stage column. **U** locks. **J** goes back.
+4. **VS** — A short intro, then the match.
+5. **Fight** — Best of three (first to two rounds). Each round is 99 seconds.
+6. **Result** — Rematch or back out with Start / punch.
 
 Default mode is **versus CPU** on **Normal**. After P1 locks, the CPU is assigned one of the characters you did not pick. You cannot steer the CPU cursor.
 
@@ -54,11 +55,17 @@ Motions are relative to the way you face (numpad notation):
 
 ## Stages
 
-Each round picks one of three arenas at random, and does not repeat the stage you just fought on:
+After character select you pick a stage and a theme song. **Random** is the default. If the stage is Random, the match picks one arena and keeps it for every round. Rematch may pick a different arena.
 
-- **Billabong** — Sunset dock
-- **Dojo** — Night ninja courtyard
-- **Neon Lab** — Cyborg factory in the rain
+| Stage | Home fighter |
+| --- | --- |
+| **Billabong** | Bob |
+| **Dojo** | Ninja |
+| **Neon Lab** | Cyber |
+| **Army Base** | Soldier |
+| **Tool Shed** | Chainsaw |
+
+Each fighter has their own 90s chip theme. You can pick any theme, or Random. The bottom-right corner shows **MUSIC: ON** or **MUSIC: OFF**. Press **M** to toggle (the browser remembers it).
 
 ## Controls
 
@@ -137,17 +144,18 @@ Vanilla TypeScript + Vite + Canvas 2D. No Phaser, no React. The sim runs at a fi
 src/
   main.ts            boot, scene switch, game loop
   config.ts          logical resolution, HP, timer, roster meta
-  scenes/            title, select, versus, fight, result
+  scenes/            title, select, arena, versus, fight, result
   fight/             fighters, combat, physics, projectiles, match
   input/             keyboard + pads, motion buffer
-  data/characters/   Bob, Ninja, Cyber, Soldier frame data
+  data/characters/   Bob, Ninja, Cyber, Soldier, Chainsaw frame data
   data/moves.ts      overlay / select move lists
-  data/stages.ts     stage roster + random pick
+  data/stages.ts     stage roster, home stages, random pick
+  data/themes.ts     fight theme ids and names
   ai/cpu.ts          versus-CPU brain (Normal / Hard)
   audio/             Web Audio SFX + chip BGM
   render/            sprites, stage, HUD, camera
 public/sprites/      per-character pose PNGs
-public/stage/        billabong, dojo, neonlab
+public/stage/        billabong, dojo, neonlab, armybase, toolshed
 scripts/process_sprites.py   chroma-key + pack generated art
 AGENTS.md            notes for coding agents
 ```

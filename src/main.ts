@@ -8,12 +8,14 @@ import { createCpu } from './ai/cpu.ts'
 import { DEFAULT_SESSION, type Game, type Scene, type SceneId } from './scenes/context.ts'
 import { titleScene } from './scenes/title.ts'
 import { selectScene } from './scenes/select.ts'
+import { arenaScene } from './scenes/arena.ts'
 import { versusScene } from './scenes/versus.ts'
 import { fightScene } from './scenes/fight.ts'
 import { resultScene } from './scenes/result.ts'
 import { ac } from './audio/sfx.ts'
 import { ensureBgm } from './audio/bgm.ts'
 import { loadSprites } from './render/sprite.ts'
+import { drawMusicStatus } from './render/hud.ts'
 
 await loadSprites()
 
@@ -39,6 +41,7 @@ const game: Game = {
 const scenes: Record<SceneId, Scene> = {
   title: titleScene(game),
   select: selectScene(game),
+  arena: arenaScene(game),
   versus: versusScene(game),
   fight: fightScene(game),
   result: resultScene(game),
@@ -76,6 +79,7 @@ startLoop(
     const ctx = view.btx
     ctx.clearRect(0, 0, view.buffer.width, view.buffer.height)
     scene.draw(ctx)
+    drawMusicStatus(ctx)
     present(view, true)
   },
 )
