@@ -19,7 +19,7 @@ export const LAND_RECOVERY = 4
 export const CHARGE_FRAMES = 40
 export const MOTION_WINDOW = 12
 export const FONT = '"Press Start 2P", monospace'
-export const VERSION = '0.3.0'
+export const VERSION = '0.4.0'
 
 export const CHAR_IDS = ['bob', 'ninja', 'cyber', 'soldier', 'chainsaw'] as const
 export type CharId = (typeof CHAR_IDS)[number]
