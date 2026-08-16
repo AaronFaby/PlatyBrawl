@@ -31,14 +31,16 @@ export function poseForAnim(anim: string, cell: number): Pose {
     anim.startsWith('billDrill') ||
     anim.startsWith('shuriken') ||
     anim.startsWith('plasma') ||
-    anim.startsWith('pistol')
+    anim.startsWith('pistol') ||
+    anim.startsWith('chainHook')
   )
     return 'special1'
   if (
     anim.startsWith('venom') ||
     anim.startsWith('shadow') ||
     anim.startsWith('rocket') ||
-    anim.startsWith('combatRush')
+    anim.startsWith('combatRush') ||
+    anim.startsWith('sawSlash')
   )
     return 'special2'
   if (anim.includes('LK') || anim.includes('HK') || anim === 'standLK' || anim === 'standHK') return 'kick'

@@ -1,11 +1,12 @@
 import { CHAR_IDS, type CharId } from '../config.ts'
 import type { CharDef } from '../fight/types.ts'
 import { bob } from './characters/bob.ts'
+import { chainsaw } from './characters/chainsaw.ts'
 import { cyber } from './characters/cyber.ts'
 import { ninja } from './characters/ninja.ts'
 import { soldier } from './characters/soldier.ts'
 
-const roster: Record<CharId, CharDef> = { bob, ninja, cyber, soldier }
+const roster: Record<CharId, CharDef> = { bob, ninja, cyber, soldier, chainsaw }
 
 export function getChar(id: CharId): CharDef {
   return roster[id]
@@ -17,4 +18,4 @@ export function pickCpuOpponent(p1: CharId, rng: () => number = Math.random): Ch
   return others[Math.floor(rng() * others.length)] ?? others[0]
 }
 
-export { bob, ninja, cyber, soldier }
+export { bob, ninja, cyber, soldier, chainsaw }

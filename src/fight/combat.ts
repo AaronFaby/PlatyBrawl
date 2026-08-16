@@ -1,3 +1,4 @@
+import { REEL_SPEED, REEL_STOP } from '../config.ts'
 import { faceRel, overlapCenter, overlaps, worldBox } from './boxes.ts'
 import { airborne, currentFrame, grounded } from './fighter.ts'
 import { projBox } from './projectile.ts'
@@ -180,11 +181,26 @@ export function resolveProjectiles(
         onBlockStun: p.onBlockStun,
         hitstop: p.hitstop,
         height: p.height,
-        pushHit: 1.6,
+        pushHit: p.pull ? 0.4 : 1.6,
         pushBlock: 1.2,
       }
       const blocked = isBlocking(victim, victimIn, p.height)
-      applyHit(fighters[p.owner], victim, move, blocked, match, overlapCenter(pb, hurt))
+      const attacker = fighters[p.owner]
+      applyHit(attacker, victim, move, blocked, match, overlapCenter(pb, hurt))
+      if (!blocked && p.pull && victim.status === 'hurt') {
+        const toward = Math.sign(attacker.x - victim.x) || -attacker.facing
+        const dist = Math.abs(victim.x - attacker.x)
+        const travel = Math.max(0, dist - REEL_STOP)
+        victim.reel = travel
+        victim.reelDir = toward as 1 | -1
+        victim.vx = 0
+        victim.hitstop = 0
+        victim.stun = Math.max(victim.stun, Math.ceil(travel / REEL_SPEED) + 6)
+        p.tether = victim.id
+        p.vx = 0
+        p.life = Math.ceil(travel / REEL_SPEED) + 4
+        attacker.canCancel = true
+      }
       p.hasHit = true
       break
     }

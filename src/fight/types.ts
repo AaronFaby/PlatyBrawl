@@ -6,11 +6,13 @@ export type Facing = 1 | -1
 
 export type Box = { x: number; y: number; w: number; h: number }
 
+export type ProjectileKind = 'shuriken' | 'beam' | 'bullet' | 'chain'
+
 export type AnimFlags = {
   invuln?: boolean
   invulnHead?: boolean
   armorHits?: number
-  projectile?: 'shuriken' | 'beam' | 'bullet'
+  projectile?: ProjectileKind
   teleport?: 'front' | 'behind'
 }
 
@@ -116,11 +118,13 @@ export type Fighter = {
   flash: number
   buffer: InputBuffer
   prevStatus: FighterStatus
+  reel: number
+  reelDir: Facing
 }
 
 export type Projectile = {
   owner: PlayerId
-  kind: 'shuriken' | 'beam' | 'bullet'
+  kind: ProjectileKind
   x: number
   y: number
   vx: number
@@ -134,6 +138,8 @@ export type Projectile = {
   life: number
   hasHit: boolean
   facing: Facing
+  pull?: number
+  tether?: PlayerId
 }
 
 export type Spark = { x: number; y: number; life: number; max: number }

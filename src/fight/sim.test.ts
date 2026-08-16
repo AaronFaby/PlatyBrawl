@@ -155,6 +155,43 @@ describe('match sim', () => {
     )
   })
 
+  it('Chainsaw QCF+P throws a chain that drags the opponent all the way in', () => {
+    const world = createMatch({ p1: 'chainsaw', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 160
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 16)
+    expect(world.match.projectiles.some((p) => p.kind === 'chain')).toBe(true)
+    let hitX = world.fighters[1].x
+    for (let i = 0; i < 50 && world.fighters[1].hp === 1000; i++) {
+      tickMatch(world, [emptyInput(), emptyInput()], false)
+      hitX = world.fighters[1].x
+    }
+    expect(world.fighters[1].hp).toBeLessThan(1000)
+    expect(hitX).toBeGreaterThan(world.fighters[0].x + 100)
+    const mid = world.fighters[1].x
+    skip(world, 8)
+    expect(world.fighters[1].x).toBeLessThan(mid - 20)
+    skip(world, 30)
+    expect(world.fighters[1].x - world.fighters[0].x).toBeLessThan(50)
+    expect(world.fighters[1].x).toBeGreaterThan(world.fighters[0].x + 16)
+  })
+
+  it('Chainsaw QCF+K starts Saw Slash', () => {
+    const world = createMatch({ p1: 'chainsaw', p2: 'bob', p2Cpu: true })
+    skip(world, 120)
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lk: dir === 6, lkPress: dir === 6, kickPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    expect(world.fighters[0].moveId === 'sawSlashL' || world.fighters[0].status === 'special').toBe(true)
+  })
+
   it('awards rounds and reaches match over', () => {
     const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
     skip(world, 120)

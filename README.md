@@ -1,6 +1,6 @@
 # Platy Brawl
 
-A 90s arcade-style 2D fighting game. Four platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → VS → fight → rematch.
+A 90s arcade-style 2D fighting game. Five platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → VS → fight → rematch.
 
 Play it: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com)
 
@@ -41,6 +41,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 | **Ninja Platy** | Rushdown | **Shuriken** `↓ ↘ → + P` · **Shadow Step** `↓ ↙ ← + K` |
 | **Cyberplaty** | Zoner | **Plasma** hold `←` then `→ + P` · **Rocket Knee** `↓ ↘ → + K` |
 | **Soldier Platy** | Gunner | **Service Pistol** `↓ ↘ → + P` · **Combat Rush** `↓ ↘ → + K` |
+| **Chainsaw Platy** | Grappler | **Chain Hook** `↓ ↘ → + P` · **Saw Slash** `↓ ↘ → + K` |
 
 Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button.
 

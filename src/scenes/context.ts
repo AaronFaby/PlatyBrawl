@@ -32,4 +32,4 @@ export type Game = {
 
 export const DEFAULT_SESSION: Session = { p1: 'bob', p2: 'ninja', p2Cpu: true, cpuDifficulty: 'normal' }
 
-export const ROSTER_ORDER: CharId[] = ['bob', 'ninja', 'cyber', 'soldier']
+export const ROSTER_ORDER: CharId[] = ['bob', 'ninja', 'cyber', 'soldier', 'chainsaw']

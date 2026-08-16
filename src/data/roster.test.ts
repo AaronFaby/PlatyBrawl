@@ -20,4 +20,13 @@ describe('pickCpuOpponent', () => {
     expect(soldier.moves.standLP).toBeTruthy()
     expect(soldier.moves.standHK).toBeTruthy()
   })
+
+  it('lists chainsaw with a chain hook and saw slash', () => {
+    expect(CHAR_IDS).toContain('chainsaw')
+    const saw = getChar('chainsaw')
+    expect(saw.specials.some((s) => s.light === 'chainHookL')).toBe(true)
+    expect(saw.specials.some((s) => s.light === 'sawSlashL')).toBe(true)
+    expect(saw.moves.standLP).toBeTruthy()
+    expect(saw.moves.standHK).toBeTruthy()
+  })
 })

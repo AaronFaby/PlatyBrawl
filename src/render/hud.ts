@@ -127,6 +127,25 @@ export function drawProjectiles(ctx: CanvasRenderingContext2D, world: FightWorld
       ctx.fillStyle = '#fff4c8'
       ctx.fillRect(p.facing === 1 ? -2 : -2, -2, 5, 5)
       ctx.restore()
+    } else if (p.kind === 'chain') {
+      const owner = world.fighters[p.owner]
+      const ox = owner.x - camX + owner.facing * 22
+      const oy = owner.y - 46
+      const tx = p.x - camX
+      const ty = p.y
+      const dx = tx - ox
+      const dy = ty - oy
+      const len = Math.hypot(dx, dy)
+      const n = Math.max(1, Math.floor(len / 6))
+      for (let i = 0; i <= n; i++) {
+        const t = i / n
+        ctx.fillStyle = i % 2 === 0 ? '#c8c4b8' : '#6a6458'
+        ctx.fillRect(ox + dx * t - 2, oy + dy * t - 2, 4, 4)
+      }
+      ctx.fillStyle = '#d8d0c0'
+      ctx.fillRect(tx - 4, ty - 3, 8, 6)
+      ctx.fillStyle = '#8a4030'
+      ctx.fillRect(tx + (p.facing > 0 ? 2 : -5), ty - 2, 4, 4)
     } else {
       const x = p.facing === 1 ? p.x - camX : p.x - camX - p.w
       const grd = ctx.createLinearGradient(x, 0, x + p.w, 0)

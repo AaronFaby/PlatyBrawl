@@ -1,8 +1,28 @@
 import { STAGE_W } from '../config.ts'
-import type { Fighter, Projectile } from './types.ts'
+import type { Fighter, Projectile, ProjectileKind } from './types.ts'
 
-export function spawnFrom(owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean): Projectile {
+export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean): Projectile {
   const facing = owner.facing
+  if (kind === 'chain') {
+    return {
+      owner: owner.id,
+      kind,
+      x: owner.x + facing * 30,
+      y: owner.y - 46,
+      vx: facing * (heavy ? 4.8 : 3.8),
+      w: 14,
+      h: 10,
+      damage: heavy ? 65 : 50,
+      onHitStun: heavy ? 20 : 16,
+      onBlockStun: heavy ? 12 : 10,
+      hitstop: heavy ? 6 : 5,
+      height: 'high',
+      life: heavy ? 88 : 78,
+      hasHit: false,
+      facing,
+      pull: 1,
+    }
+  }
   if (kind === 'bullet') {
     return {
       owner: owner.id,
@@ -70,12 +90,16 @@ export function projBox(p: Projectile): { x: number; y: number; w: number; h: nu
 
 export function tickProjectiles(list: Projectile[]): void {
   for (const p of list) {
-    p.x += p.vx
+    if (p.tether == null) p.x += p.vx
     p.life -= 1
   }
   for (let i = list.length - 1; i >= 0; i--) {
     const p = list[i]
-    if (p.life <= 0 || p.x < -40 || p.x > STAGE_W + 40 || p.hasHit) list.splice(i, 1)
+    if (p.life <= 0 || p.x < -40 || p.x > STAGE_W + 40) {
+      list.splice(i, 1)
+      continue
+    }
+    if (p.hasHit && p.tether == null) list.splice(i, 1)
   }
 }
 

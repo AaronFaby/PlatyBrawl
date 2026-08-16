@@ -69,7 +69,7 @@ export function titleScene(game: Game): Scene {
       ctx.fillStyle = '#ff3d7f'
       ctx.fillText('BRAWL', LOGICAL_W / 2, 126)
 
-      const spacing = 90
+      const spacing = ROSTER_ORDER.length >= 5 ? 80 : 90
       const startX = LOGICAL_W / 2 - ((ROSTER_ORDER.length - 1) * spacing) / 2
       ROSTER_ORDER.forEach((id, i) => drawTitleFighter(ctx, id, startX + i * spacing, 196))
 

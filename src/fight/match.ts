@@ -11,7 +11,7 @@ import {
   tickFighter,
 } from './fighter.ts'
 import { clampStage, resolvePush } from './physics.ts'
-import type { Fighter, MatchState, PlayerId, Session } from './types.ts'
+import type { Fighter, MatchState, PlayerId, ProjectileKind, Session } from './types.ts'
 
 export type FightWorld = {
   match: MatchState
@@ -89,7 +89,7 @@ export function tickMatch(
     frame: world.frame,
     other: fighters[id === 0 ? 1 : 0],
     match,
-    spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean) => {
+    spawnProjectile: (owner: Fighter, kind: ProjectileKind, heavy: boolean) => {
       match.projectiles.push(spawnFrom(owner, kind, heavy))
     },
   })
@@ -161,6 +161,12 @@ export function tickMatch(
   clampStage(fighters[0])
   clampStage(fighters[1])
   resolvePush(fighters[0], fighters[1])
+  for (const p of match.projectiles) {
+    if (p.tether == null) continue
+    const hooked = fighters[p.tether]
+    p.x = hooked.x
+    p.y = hooked.y - 40
+  }
   tickProjectiles(match.projectiles)
   clashProjectiles(match.projectiles)
 

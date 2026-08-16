@@ -102,13 +102,13 @@ export function selectScene(game: Game): Scene {
       ctx.fillText('SELECT YOUR PLATY', LOGICAL_W / 2, 24)
 
       const n = ROSTER_ORDER.length
-      const cardW = 100
-      const gap = 12
+      const gap = n >= 5 ? 6 : 12
+      const cardW = Math.min(100, Math.floor((LOGICAL_W - 16 - (n - 1) * gap) / n))
       const startX = Math.floor((LOGICAL_W - (n * cardW + (n - 1) * gap)) / 2)
       ROSTER_ORDER.forEach((id, i) => {
         const x = startX + i * (cardW + gap)
         const y = 70
-        drawCard(ctx, id, x, y, {
+        drawCard(ctx, id, x, y, cardW, {
           p1: i === c1,
           p2: p2Human ? i === c2 : lock2 && i === c2,
           l1: lock1 && i === c1,
@@ -144,43 +144,47 @@ function drawCard(
   id: CharId,
   x: number,
   y: number,
+  w: number,
   mark: { p1: boolean; p2: boolean; l1: boolean; l2: boolean; cpu: boolean },
 ): void {
   const { p1, p2, l1, l2, cpu } = mark
   const meta = CHAR_META[id]
+  const h = w >= 96 ? 130 : 118
   ctx.fillStyle = '#1a1020'
-  ctx.fillRect(x, y, 100, 130)
+  ctx.fillRect(x, y, w, h)
   ctx.strokeStyle = p1 && p2 ? '#ffe14a' : p1 ? '#ff4d8d' : p2 ? '#3dc8ff' : '#4a3050'
   ctx.lineWidth = p1 || p2 ? 3 : 1
-  ctx.strokeRect(x, y, 100, 130)
+  ctx.strokeRect(x, y, w, h)
 
+  const pad = 8
+  const face = Math.min(80, w - pad * 2)
   const portrait = getPortrait(id)
   if (portrait) {
     ctx.imageSmoothingEnabled = false
-    ctx.drawImage(portrait, x + 10, y + 18, 80, 80)
+    ctx.drawImage(portrait, x + Math.floor((w - face) / 2), y + 16, face, face)
   } else {
     ctx.fillStyle = meta.color
     ctx.beginPath()
-    ctx.ellipse(x + 50, y + 62, 28, 32, 0, 0, Math.PI * 2)
+    ctx.ellipse(x + w / 2, y + 16 + face / 2, face * 0.35, face * 0.4, 0, 0, Math.PI * 2)
     ctx.fill()
   }
 
   ctx.textAlign = 'center'
   ctx.font = `7px ${FONT}`
   ctx.fillStyle = '#fff4c8'
-  ctx.fillText(meta.short, x + 50, y + 108)
+  ctx.fillText(meta.short, x + w / 2, y + h - 22)
   ctx.fillStyle = '#c8b8d8'
   ctx.font = `6px ${FONT}`
-  ctx.fillText(meta.subtitle, x + 50, y + 120)
+  ctx.fillText(meta.subtitle, x + w / 2, y + h - 10)
 
   if (p1) {
     ctx.fillStyle = l1 ? '#ff4d8d' : '#ff8aa8'
     ctx.font = `8px ${FONT}`
-    ctx.fillText('P1', x + 18, y + 16)
+    ctx.fillText('P1', x + 16, y + 14)
   }
   if (p2) {
     ctx.fillStyle = l2 ? '#3dc8ff' : '#9ad0ff'
     ctx.font = `8px ${FONT}`
-    ctx.fillText(cpu ? 'CPU' : 'P2', x + 82, y + 16)
+    ctx.fillText(cpu ? 'CPU' : 'P2', x + w - 16, y + 14)
   }
 }

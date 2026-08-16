@@ -4,7 +4,7 @@ Guidance for coding agents that work in this repository.
 
 ## Project
 
-Platy Brawl is a 90s arcade 2D fighter: four platypuses, motion specials, first to two rounds, local two-player or versus CPU. Live site: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com). Player-facing docs live in [README.md](README.md).
+Platy Brawl is a 90s arcade 2D fighter: five platypuses, motion specials, first to two rounds, local two-player or versus CPU. Live site: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com). Player-facing docs live in [README.md](README.md).
 
 Vanilla TypeScript + Vite + Canvas 2D. No Phaser, no React, no extra UI framework. The sim is fixed 60 Hz (`DT = 1/60` in `src/config.ts`). The logical view is 480×270, nearest-neighbor scaled and letterboxed.
 
@@ -83,7 +83,7 @@ World offset of sprite pixel `(px, py)` is `((px - 80) * 0.7, (py - 156) * 0.7)`
 - Specials are `SpecialDef` rows on the character: `{ motion, button, light, heavy }`. Motions: `qcf`, `qcb`, `dp`, `charge`. Charge needs `CHARGE_FRAMES` (40) of back, then forward + punch, with 14 frames of grace.
 - Light versus heavy is the light versus heavy button on that punch/kick, not a separate motion.
 - Throw is **LP + LK** while close (`THROW_RANGE`).
-- Projectile kinds today: `shuriken` (ninja), `beam` (cyber plasma), `bullet` (soldier pistol, spawn `+58` facing / `-67` y so it leaves the muzzle).
+- Projectile kinds today: `shuriken` (ninja), `beam` (cyber plasma), `bullet` (soldier pistol, spawn `+58` facing / `-67` y so it leaves the muzzle), `chain` (chainsaw hook, spawn `+30` facing / `-46` y; on hit reels the defender in over several frames).
 - Anim flags can also set `invuln`, `invulnHead`, `armorHits`, `teleport`.
 
 If you rename a move, update the character file, `moves.ts`, `poseForAnim`, and any CPU plan that hardcodes that motion.

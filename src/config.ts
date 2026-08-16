@@ -11,15 +11,17 @@ export const WINS_NEEDED = 2
 export const JUMP_V = -6.15
 export const GRAVITY = 0.28
 export const THROW_RANGE = 34
+export const REEL_SPEED = 6
+export const REEL_STOP = 32
 export const THROW_DAMAGE = 140
 export const WAKEUP_INVULN = 6
 export const LAND_RECOVERY = 4
 export const CHARGE_FRAMES = 40
 export const MOTION_WINDOW = 12
 export const FONT = '"Press Start 2P", monospace'
-export const VERSION = '0.1.0'
+export const VERSION = '0.2.0'
 
-export const CHAR_IDS = ['bob', 'ninja', 'cyber', 'soldier'] as const
+export const CHAR_IDS = ['bob', 'ninja', 'cyber', 'soldier', 'chainsaw'] as const
 export type CharId = (typeof CHAR_IDS)[number]
 
 export const CHAR_META: Record<
@@ -49,5 +51,11 @@ export const CHAR_META: Record<
     short: 'SOLDIER',
     subtitle: 'GUNNER',
     color: '#4a6b3a',
+  },
+  chainsaw: {
+    name: 'CHAINSAW PLATY',
+    short: 'SAW',
+    subtitle: 'GRAPPLER',
+    color: '#8a8a92',
   },
 }

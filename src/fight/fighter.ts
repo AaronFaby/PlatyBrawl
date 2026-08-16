@@ -3,6 +3,7 @@ import {
   GROUND_Y,
   LAND_RECOVERY,
   MAX_HP,
+  REEL_SPEED,
   STAGE_PAD,
   STAGE_W,
   THROW_RANGE,
@@ -21,13 +22,14 @@ import type {
   FighterStatus,
   MatchState,
   PlayerId,
+  ProjectileKind,
 } from './types.ts'
 
 export type FightHooks = {
   frame: number
   other: Fighter
   match: MatchState
-  spawnProjectile: (owner: Fighter, kind: 'shuriken' | 'beam' | 'bullet', heavy: boolean) => void
+  spawnProjectile: (owner: Fighter, kind: ProjectileKind, heavy: boolean) => void
 }
 
 export function createFighter(id: PlayerId, charId: CharId, x: number, facing: Facing): Fighter {
@@ -58,6 +60,8 @@ export function createFighter(id: PlayerId, charId: CharId, x: number, facing: F
     flash: 0,
     buffer: createBuffer(),
     prevStatus: 'idle',
+    reel: 0,
+    reelDir: 1,
   }
 }
 
@@ -82,6 +86,8 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.wakeupInvuln = 0
   f.landTicks = 0
   f.flash = 0
+  f.reel = 0
+  f.reelDir = 1
   f.buffer.events.length = 0
   f.buffer.lastDir = 5
   f.buffer.chargeBack = 0
@@ -429,7 +435,7 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
 
   if (f.status === 'hurt' || f.status === 'block') {
     if (f.stun > 0) f.stun -= 1
-    if (f.status === 'hurt' && f.stun <= 0) {
+    if (f.status === 'hurt' && f.stun <= 0 && f.reel <= 0) {
       if (f.pendingKd && grounded(f)) {
         f.pendingKd = false
         setAnim(f, 'knockdown', 'knockdown')
@@ -471,8 +477,26 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
   if (airborne(f) || f.vy < 0) f.vy += GRAVITY
   if (f.status === 'idle' || f.status === 'crouch' || f.status === 'block') f.vx = 0
 
+  if (f.reel > 0) {
+    f.vx = 0
+    f.vy = 0
+  }
+
   f.x += f.vx
   f.y += f.vy
+  if (f.reel > 0) {
+    const step = Math.min(f.reel, REEL_SPEED)
+    f.x += f.reelDir * step
+    f.reel -= step
+    if (f.x < STAGE_PAD) {
+      f.x = STAGE_PAD
+      f.reel = 0
+    }
+    if (f.x > STAGE_W - STAGE_PAD) {
+      f.x = STAGE_W - STAGE_PAD
+      f.reel = 0
+    }
+  }
   applyLand(f)
 
   if (f.status === 'walk' || f.status === 'walkBack') {

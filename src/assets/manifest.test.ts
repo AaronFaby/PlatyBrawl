@@ -19,4 +19,11 @@ describe('pose mapping', () => {
     expect(poseForAnim('standLP', 1)).toBe('punch')
     expect(poseForAnim('standHK', 1)).toBe('kick')
   })
+
+  it('maps chainsaw specials to the hook and slash poses', () => {
+    expect(poseForAnim('chainHookL', 1)).toBe('special1')
+    expect(poseForAnim('chainHookH', 0)).toBe('special1')
+    expect(poseForAnim('sawSlashL', 1)).toBe('special2')
+    expect(poseForAnim('sawSlashH', 0)).toBe('special2')
+  })
 })
