@@ -24,6 +24,9 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
     ctx.font = `8px ${FONT}`
   }
 
+  drawStatusTags(ctx, fighters[0], 26, 32, 'left')
+  drawStatusTags(ctx, fighters[1], LOGICAL_W - 26, 32, 'right')
+
   drawPips(ctx, 26, 50, match.wins[0], '#ff6b6b')
   drawPips(ctx, LOGICAL_W - 26 - (WINS_NEEDED * 10 - 2), 50, match.wins[1], '#6bc8ff')
 
@@ -89,6 +92,25 @@ function drawBar(
   ctx.fillRect(flip ? x + w - fw : x, y, fw, 3)
 }
 
+function drawStatusTags(
+  ctx: CanvasRenderingContext2D,
+  f: FightWorld['fighters'][number],
+  x: number,
+  y: number,
+  align: CanvasTextAlign,
+): void {
+  const bits: string[] = []
+  if (f.poisonLeft > 0) bits.push('PSN')
+  if (f.radHits > 0) bits.push('RAD')
+  if (!bits.length) return
+  ctx.save()
+  ctx.font = `5px ${FONT}`
+  ctx.textAlign = align
+  ctx.fillStyle = f.poisonLeft > 0 && f.radHits > 0 ? '#c8ff6a' : f.poisonLeft > 0 ? '#7dff4a' : '#e8ff3a'
+  ctx.fillText(bits.join('  '), x, y)
+  ctx.restore()
+}
+
 function drawPips(ctx: CanvasRenderingContext2D, x: number, y: number, n: number, color: string): void {
   for (let i = 0; i < WINS_NEEDED; i++) {
     ctx.fillStyle = i < n ? color : '#2a2020'
@@ -137,6 +159,22 @@ export function drawProjectiles(ctx: CanvasRenderingContext2D, world: FightWorld
       ctx.fillRect(p.facing === 1 ? -8 : -4, -1, 12, 3)
       ctx.fillStyle = '#fff4c8'
       ctx.fillRect(p.facing === 1 ? -2 : -2, -2, 5, 5)
+      ctx.restore()
+    } else if (p.kind === 'gas') {
+      ctx.save()
+      ctx.translate(p.x - camX, p.y)
+      ctx.fillStyle = 'rgba(120,220,40,0.35)'
+      ctx.beginPath()
+      ctx.arc(0, 0, 10, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#6a8030'
+      ctx.beginPath()
+      ctx.arc(0, 1, 5, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#c8d060'
+      ctx.fillRect(-2, -7, 4, 4)
+      ctx.fillStyle = '#3a4020'
+      ctx.fillRect(-1, -8, 2, 3)
       ctx.restore()
     } else if (p.kind === 'chain') {
       const owner = world.fighters[p.owner]

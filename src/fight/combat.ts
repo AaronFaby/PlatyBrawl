@@ -2,7 +2,7 @@ import { REEL_SPEED, REEL_STOP } from '../config.ts'
 import { faceRel, overlapCenter, overlaps, worldBox } from './boxes.ts'
 import { airborne, currentFrame, grounded } from './fighter.ts'
 import { projBox } from './projectile.ts'
-import type { Box, Fighter, MatchState, MoveDef, Projectile } from './types.ts'
+import type { Box, Fighter, MatchState, MoveDef, PoisonSpec, Projectile } from './types.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 
 function invuln(f: Fighter): boolean {
@@ -44,10 +44,46 @@ function holdingBack(dir: number, facing: Fighter['facing']): boolean {
   return rel === 1 || rel === 4 || rel === 7
 }
 
+function applyPoison(victim: Fighter, spec: PoisonSpec): void {
+  victim.poisonLeft = spec.duration
+  victim.poisonDmg = spec.damage
+  victim.poisonEvery = spec.interval
+  victim.poisonAcc = 0
+}
+
+export function tickPoison(f: Fighter, other: Fighter, match: MatchState): void {
+  if (f.poisonLeft <= 0) return
+  if (f.status === 'ko') {
+    f.poisonLeft = 0
+    return
+  }
+  f.poisonLeft -= 1
+  f.poisonAcc += 1
+  if (f.poisonEvery <= 0 || f.poisonAcc < f.poisonEvery) return
+  f.poisonAcc = 0
+  const away = Math.sign(f.x - other.x) || other.facing
+  f.hp = Math.max(0, f.hp - f.poisonDmg)
+  f.flash = 3
+  if (f.hp <= 0) {
+    f.status = 'ko'
+    f.anim = 'ko'
+    f.frameIndex = 0
+    f.frameTicks = 0
+    f.stun = 0
+    f.vx = away * 3.2
+    f.vy = -3.4
+    f.pendingKd = false
+    f.poisonLeft = 0
+    match.shake = 7
+  }
+}
+
 function applyHit(
   attacker: Fighter,
   victim: Fighter,
-  move: Pick<MoveDef, 'damage' | 'onHitStun' | 'onBlockStun' | 'hitstop' | 'knockdown' | 'launch' | 'height' | 'pushHit' | 'pushBlock'>,
+  move: Pick<MoveDef, 'damage' | 'onHitStun' | 'onBlockStun' | 'hitstop' | 'knockdown' | 'launch' | 'height' | 'pushHit' | 'pushBlock'> & {
+    poison?: PoisonSpec
+  },
   blocked: boolean,
   match: MatchState,
   contact: { x: number; y: number },
@@ -81,10 +117,16 @@ function applyHit(
     return
   }
 
-  victim.hp = Math.max(0, victim.hp - move.damage)
+  let dmg = move.damage
+  if (attacker.radHits > 0) {
+    dmg *= 2
+    attacker.radHits = 0
+  }
+  victim.hp = Math.max(0, victim.hp - dmg)
   victim.flash = 5
   victim.moveId = null
   victim.hasHit = false
+  if (move.poison) applyPoison(victim, move.poison)
   if (victim.hp <= 0) {
     victim.status = 'ko'
     victim.anim = 'ko'
@@ -183,6 +225,7 @@ export function resolveProjectiles(
         height: p.height,
         pushHit: p.pull ? 0.4 : 1.6,
         pushBlock: 1.2,
+        poison: p.poison,
       }
       const blocked = isBlocking(victim, victimIn, p.height)
       const attacker = fighters[p.owner]

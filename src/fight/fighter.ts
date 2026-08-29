@@ -62,6 +62,11 @@ export function createFighter(id: PlayerId, charId: CharId, x: number, facing: F
     prevStatus: 'idle',
     reel: 0,
     reelDir: 1,
+    poisonLeft: 0,
+    poisonDmg: 0,
+    poisonEvery: 0,
+    poisonAcc: 0,
+    radHits: 0,
   }
 }
 
@@ -88,6 +93,11 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.flash = 0
   f.reel = 0
   f.reelDir = 1
+  f.poisonLeft = 0
+  f.poisonDmg = 0
+  f.poisonEvery = 0
+  f.poisonAcc = 0
+  f.radHits = 0
   f.buffer.events.length = 0
   f.buffer.lastDir = 5
   f.buffer.chargeBack = 0
@@ -249,7 +259,12 @@ function tryThrow(f: Fighter, input: VirtualInput, other: Fighter): boolean {
   other.moveId = null
   other.stun = 20
   other.pendingKd = true
-  other.hp = Math.max(0, other.hp - 140)
+  let throwDmg = 140
+  if (f.radHits > 0) {
+    throwDmg *= 2
+    f.radHits = 0
+  }
+  other.hp = Math.max(0, other.hp - throwDmg)
   other.vx = f.facing * 2.4
   other.vy = -2.2
   other.flash = 6
@@ -407,6 +422,13 @@ function handleProjectileSpawn(f: Fighter, hooks: FightHooks): void {
   hooks.spawnProjectile(f, fr.flags.projectile, heavy)
 }
 
+function handleRadBuff(f: Fighter): void {
+  const fr = currentFrame(f)
+  if (!fr.flags?.radBuff) return
+  if (f.frameTicks !== 0) return
+  f.radHits = 1
+}
+
 export function faceOpponent(f: Fighter, other: Fighter): void {
   if (!grounded(f) || !actionable(f)) return
   const dx = other.x - f.x
@@ -473,6 +495,7 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
 
   handleTeleport(f, hooks.other)
   handleProjectileSpawn(f, hooks)
+  handleRadBuff(f)
 
   if (airborne(f) || f.vy < 0) f.vy += GRAVITY
   if (f.status === 'idle' || f.status === 'crouch' || f.status === 'block') f.vx = 0

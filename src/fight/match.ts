@@ -2,7 +2,7 @@ import { GROUND_Y, MAX_HP, ROUND_SECONDS, WINS_NEEDED } from '../config.ts'
 import { stageForSession } from '../data/stages.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 import { clashProjectiles, spawnFrom, tickProjectiles } from './projectile.ts'
-import { resolveProjectiles, resolveStrikes } from './combat.ts'
+import { resolveProjectiles, resolveStrikes, tickPoison } from './combat.ts'
 import {
   createFighter,
   dummyBlockInput,
@@ -172,6 +172,8 @@ export function tickMatch(
   if (match.phase === 'fight') {
     resolveStrikes(fighters[0], fighters[1], inputs[0], inputs[1], match)
     resolveProjectiles(fighters, inputs, match.projectiles, match)
+    tickPoison(fighters[0], fighters[1], match)
+    tickPoison(fighters[1], fighters[0], match)
   }
 
   for (const f of fighters) {

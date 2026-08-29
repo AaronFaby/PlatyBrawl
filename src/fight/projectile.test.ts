@@ -14,6 +14,19 @@ describe('spawnFrom', () => {
     expect(q.y).toBe(left.y - 67)
   })
 
+  it('puts a toxic gas bomb at the throwing hand, not the torso', () => {
+    const f = createFighter(0, 'toxic', 220, 1)
+    const p = spawnFrom(f, 'gas', false)
+    expect(p.x).toBe(220 + 32)
+    expect(p.y).toBe(f.y - 40)
+    expect(p.poison).toBeTruthy()
+    const left = createFighter(0, 'toxic', 400, -1)
+    const q = spawnFrom(left, 'gas', true)
+    expect(q.x).toBe(400 - 32)
+    expect(q.y).toBe(left.y - 40)
+    expect(q.poison?.duration).toBeGreaterThan(p.poison!.duration)
+  })
+
   it('puts a chainsaw hook at the saw bill, not the torso', () => {
     const f = createFighter(0, 'chainsaw', 220, 1)
     const p = spawnFrom(f, 'chain', false)

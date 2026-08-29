@@ -1,0 +1,258 @@
+import { rect } from '../../fight/boxes.ts'
+import type { CharDef } from '../../fight/types.ts'
+import {
+  airHurt,
+  airPush,
+  crouchHurt,
+  crouchPush,
+  f,
+  loopIdle,
+  loopWalk,
+  strike,
+} from '../anim.ts'
+
+const cancel = ['gasBombL', 'gasBombH', 'meltDownL', 'meltDownH']
+
+const lp = strike({
+  id: 'standLP',
+  startup: 4,
+  active: 3,
+  recovery: 7,
+  hit: rect(10, -44, 24, 16),
+  damage: 40,
+  hitstun: 12,
+  blockstun: 8,
+  hitstop: 3,
+  height: 'high',
+  cancelInto: cancel,
+  pushHit: 1.5,
+})
+
+const hp = strike({
+  id: 'standHP',
+  startup: 9,
+  active: 4,
+  recovery: 16,
+  hit: rect(10, -50, 28, 22),
+  damage: 95,
+  hitstun: 18,
+  blockstun: 12,
+  hitstop: 6,
+  height: 'mid',
+  cancelInto: cancel,
+  pushHit: 2.4,
+})
+
+const lk = strike({
+  id: 'standLK',
+  startup: 5,
+  active: 3,
+  recovery: 10,
+  hit: rect(6, -28, 24, 16),
+  damage: 50,
+  hitstun: 12,
+  blockstun: 8,
+  hitstop: 3,
+  height: 'mid',
+  cancelInto: cancel,
+  pushHit: 1.8,
+})
+
+const hk = strike({
+  id: 'standHK',
+  startup: 9,
+  active: 4,
+  recovery: 18,
+  hit: rect(8, -36, 30, 20),
+  damage: 100,
+  hitstun: 16,
+  blockstun: 12,
+  hitstop: 6,
+  height: 'mid',
+  pushHit: 2.6,
+})
+
+const clp = strike({
+  id: 'crouchLP',
+  startup: 4,
+  active: 2,
+  recovery: 8,
+  hit: rect(8, -22, 24, 14),
+  damage: 35,
+  hitstun: 10,
+  blockstun: 6,
+  hitstop: 3,
+  height: 'low',
+  hurt: crouchHurt,
+  push: crouchPush,
+  cancelInto: cancel,
+  pushHit: 1.4,
+})
+
+const chk = strike({
+  id: 'crouchHK',
+  startup: 8,
+  active: 4,
+  recovery: 20,
+  hit: rect(4, -18, 36, 16),
+  damage: 90,
+  hitstun: 14,
+  blockstun: 10,
+  hitstop: 6,
+  height: 'low',
+  knockdown: true,
+  hurt: crouchHurt,
+  push: crouchPush,
+  pushHit: 2.2,
+})
+
+const jlp = strike({
+  id: 'jumpLP',
+  startup: 4,
+  active: 10,
+  recovery: 4,
+  hit: rect(6, -40, 22, 18),
+  damage: 50,
+  hitstun: 10,
+  blockstun: 6,
+  hitstop: 4,
+  height: 'air',
+  hurt: airHurt,
+  push: airPush,
+})
+
+const jhk = strike({
+  id: 'jumpHK',
+  startup: 6,
+  active: 8,
+  recovery: 6,
+  hit: rect(4, -24, 28, 20),
+  damage: 90,
+  hitstun: 12,
+  blockstun: 8,
+  hitstop: 6,
+  height: 'air',
+  hurt: airHurt,
+  push: airPush,
+})
+
+const bombL = [
+  f(8, { cell: 0 }),
+  f(4, { cell: 1, flags: { projectile: 'gas' } }),
+  f(14, { cell: 2 }),
+]
+const bombH = [
+  f(12, { cell: 0 }),
+  f(4, { cell: 1, flags: { projectile: 'gas' } }),
+  f(18, { cell: 2 }),
+]
+const meltL = [
+  f(8, { cell: 0 }),
+  f(6, { cell: 1, flags: { radBuff: true } }),
+  f(10, { cell: 2 }),
+]
+const meltH = [
+  f(12, { cell: 0 }),
+  f(8, { cell: 1, flags: { radBuff: true } }),
+  f(14, { cell: 2 }),
+]
+
+export const toxic: CharDef = {
+  id: 'toxic',
+  name: 'TOXIC PLATY',
+  subtitle: 'HAZMAT',
+  walkSpeed: 1.48,
+  backSpeed: 1.08,
+  jumpV: -6.0,
+  anims: {
+    idle: loopIdle(),
+    walk: loopWalk(),
+    walkBack: loopWalk(),
+    crouch: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    jump: [f(99, { cell: 0, hurt: airHurt, push: airPush })],
+    land: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    block: [f(4, { cell: 0 })],
+    crouchBlock: [f(4, { cell: 0, hurt: crouchHurt, push: crouchPush })],
+    hurt: [f(4, { cell: 0 }), f(4, { cell: 1 })],
+    knockdown: [f(20, { cell: 0, hurt: [], push: rect(-18, -16, 36, 16) })],
+    wakeup: [f(8, { cell: 0, hurt: crouchHurt, push: crouchPush, flags: { invuln: true } })],
+    throw: [f(8, { cell: 0 }), f(12, { cell: 1 })],
+    thrown: [f(20, { cell: 0, hurt: [] })],
+    win: [f(12, { cell: 0 }), f(12, { cell: 1 })],
+    ko: [f(8, { cell: 0, hurt: [] }), f(40, { cell: 1, hurt: [], push: rect(-18, -16, 36, 16) })],
+    standLP: lp.anim,
+    standHP: hp.anim,
+    standLK: lk.anim,
+    standHK: hk.anim,
+    crouchLP: clp.anim,
+    crouchHK: chk.anim,
+    jumpLP: jlp.anim,
+    jumpHK: jhk.anim,
+    gasBombL: bombL,
+    gasBombH: bombH,
+    meltDownL: meltL,
+    meltDownH: meltH,
+  },
+  moves: {
+    standLP: lp.move,
+    standHP: hp.move,
+    standLK: lk.move,
+    standHK: hk.move,
+    crouchLP: clp.move,
+    crouchHK: chk.move,
+    jumpLP: jlp.move,
+    jumpHK: jhk.move,
+    gasBombL: {
+      id: 'gasBombL',
+      anim: 'gasBombL',
+      damage: 35,
+      onHitStun: 12,
+      onBlockStun: 8,
+      hitstop: 4,
+      height: 'high',
+      pushHit: 1.2,
+    },
+    gasBombH: {
+      id: 'gasBombH',
+      anim: 'gasBombH',
+      damage: 50,
+      onHitStun: 14,
+      onBlockStun: 8,
+      hitstop: 4,
+      height: 'high',
+      pushHit: 1.4,
+    },
+    meltDownL: {
+      id: 'meltDownL',
+      anim: 'meltDownL',
+      damage: 0,
+      onHitStun: 0,
+      onBlockStun: 0,
+      hitstop: 0,
+      height: 'mid',
+    },
+    meltDownH: {
+      id: 'meltDownH',
+      anim: 'meltDownH',
+      damage: 0,
+      onHitStun: 0,
+      onBlockStun: 0,
+      hitstop: 0,
+      height: 'mid',
+    },
+    throw: {
+      id: 'throw',
+      anim: 'throw',
+      damage: 140,
+      onHitStun: 20,
+      onBlockStun: 0,
+      hitstop: 8,
+      knockdown: true,
+      height: 'mid',
+    },
+  },
+  specials: [
+    { motion: 'qcf', button: 'p', light: 'gasBombL', heavy: 'gasBombH' },
+    { motion: 'qcb', button: 'k', light: 'meltDownL', heavy: 'meltDownH' },
+  ],
+}

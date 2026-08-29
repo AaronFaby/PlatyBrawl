@@ -192,6 +192,109 @@ describe('match sim', () => {
     expect(world.fighters[0].moveId === 'sawSlashL' || world.fighters[0].status === 'special').toBe(true)
   })
 
+  it('Toxic QCF+P throws a gas bomb that poisons on hit', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 90
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 16)
+    expect(world.match.projectiles.some((p) => p.kind === 'gas')).toBe(true)
+    for (let i = 0; i < 50 && world.fighters[1].hp === 1000; i++) {
+      tickMatch(world, [emptyInput(), emptyInput()], false)
+    }
+    expect(world.fighters[1].hp).toBeLessThan(1000)
+    expect(world.fighters[1].poisonLeft).toBeGreaterThan(0)
+    const afterHit = world.fighters[1].hp
+    skip(world, 65)
+    expect(world.fighters[1].hp).toBeLessThan(afterHit)
+    expect(world.fighters[1].status).not.toBe('hurt')
+  })
+
+  it('blocked gas bomb does not apply poison', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 90
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    let p2 = tap({ dir: 6 })
+    for (let i = 0; i < 60; i++) {
+      p2 = hold(p2, { dir: 6 })
+      tickMatch(world, [emptyInput(), p2], false)
+    }
+    expect(world.fighters[1].poisonLeft).toBe(0)
+    expect(world.fighters[1].hp).toBe(1000)
+  })
+
+  it('Toxic QCB+K Meltdown doubles the next unblocked hit', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    let p1 = emptyInput()
+    for (const dir of [2, 1, 4]) {
+      p1 = hold(p1, { dir, lk: dir === 4, lkPress: dir === 4, kickPress: dir === 4 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 40)
+    expect(world.fighters[0].radHits).toBe(1)
+    expect(world.fighters[0].status).toBe('idle')
+    world.fighters[1].x = world.fighters[0].x + 28
+    p1 = hold(emptyInput(), { lp: true, lpPress: true, punchPress: true })
+    tickMatch(world, [p1, emptyInput()], false)
+    skip(world, 12)
+    expect(world.fighters[1].hp).toBe(920)
+    expect(world.fighters[0].radHits).toBe(0)
+    skip(world, 24)
+    world.fighters[1].x = world.fighters[0].x + 28
+    world.fighters[1].status = 'idle'
+    world.fighters[1].anim = 'idle'
+    world.fighters[1].stun = 0
+    p1 = hold(emptyInput(), { lp: true, lpPress: true, punchPress: true })
+    tickMatch(world, [p1, emptyInput()], false)
+    skip(world, 12)
+    expect(world.fighters[1].hp).toBe(880)
+  })
+
+  it('blocked jab does not consume Meltdown', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    let p1 = emptyInput()
+    for (const dir of [2, 1, 4]) {
+      p1 = hold(p1, { dir, lk: dir === 4, lkPress: dir === 4, kickPress: dir === 4 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 40)
+    expect(world.fighters[0].radHits).toBe(1)
+    expect(world.fighters[0].status).toBe('idle')
+    world.fighters[1].x = world.fighters[0].x + 28
+    p1 = hold(emptyInput(), { lp: true, lpPress: true, punchPress: true })
+    let p2 = tap({ dir: 6 })
+    tickMatch(world, [p1, p2], false)
+    p2 = hold(p2, { dir: 6 })
+    skip(world, 12, emptyInput(), p2)
+    expect(world.fighters[1].hp).toBe(1000)
+    expect(world.fighters[0].radHits).toBe(1)
+  })
+
+  it('round reset clears poison and Meltdown', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].poisonLeft = 40
+    world.fighters[1].poisonDmg = 5
+    world.fighters[1].poisonEvery = 12
+    world.fighters[0].radHits = 1
+    world.fighters[1].hp = 0
+    skip(world, 180)
+    expect(world.match.round).toBe(2)
+    expect(world.fighters[1].poisonLeft).toBe(0)
+    expect(world.fighters[0].radHits).toBe(0)
+  })
+
   it('awards rounds and reaches match over', () => {
     const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
     skip(world, 120)

@@ -6,7 +6,9 @@ export type Facing = 1 | -1
 
 export type Box = { x: number; y: number; w: number; h: number }
 
-export type ProjectileKind = 'shuriken' | 'beam' | 'bullet' | 'chain'
+export type ProjectileKind = 'shuriken' | 'beam' | 'bullet' | 'chain' | 'gas'
+
+export type PoisonSpec = { damage: number; interval: number; duration: number }
 
 export type AnimFlags = {
   invuln?: boolean
@@ -14,6 +16,7 @@ export type AnimFlags = {
   armorHits?: number
   projectile?: ProjectileKind
   teleport?: 'front' | 'behind'
+  radBuff?: boolean
 }
 
 export type AnimFrame = {
@@ -120,6 +123,11 @@ export type Fighter = {
   prevStatus: FighterStatus
   reel: number
   reelDir: Facing
+  poisonLeft: number
+  poisonDmg: number
+  poisonEvery: number
+  poisonAcc: number
+  radHits: number
 }
 
 export type Projectile = {
@@ -140,6 +148,7 @@ export type Projectile = {
   facing: Facing
   pull?: number
   tether?: PlayerId
+  poison?: PoisonSpec
 }
 
 export type Spark = { x: number; y: number; life: number; max: number }

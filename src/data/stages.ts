@@ -1,6 +1,6 @@
 import type { CharId } from '../config.ts'
 
-export const STAGE_IDS = ['billabong', 'dojo', 'neonlab', 'armybase', 'toolshed'] as const
+export const STAGE_IDS = ['billabong', 'dojo', 'neonlab', 'armybase', 'toolshed', 'sludgepit'] as const
 export type StageId = (typeof STAGE_IDS)[number]
 export type StagePick = StageId | 'random'
 
@@ -10,6 +10,7 @@ export const STAGE_META: Record<StageId, { name: string }> = {
   neonlab: { name: 'NEON LAB' },
   armybase: { name: 'ARMY BASE' },
   toolshed: { name: 'TOOL SHED' },
+  sludgepit: { name: 'SLUDGE PIT' },
 }
 
 /** One home stage per fighter. Add a row when you add a character. */
@@ -19,6 +20,7 @@ export const CHAR_STAGE: Record<CharId, StageId> = {
   cyber: 'neonlab',
   soldier: 'armybase',
   chainsaw: 'toolshed',
+  toxic: 'sludgepit',
 }
 
 export function pickStage(exclude?: StageId, rng: () => number = Math.random): StageId {
