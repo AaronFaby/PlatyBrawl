@@ -23,6 +23,11 @@ export function resultScene(game: Game): Scene {
       prevDir = 5
       sfxWin()
       ensureBgm('win')
+      if (data && data.winner !== null) {
+        const w = data.world.fighters[data.winner]
+        w.status = 'win'
+        w.anim = 'win'
+      }
     },
     exit() {},
     update() {
@@ -50,10 +55,8 @@ export function resultScene(game: Game): Scene {
       if (data?.winner === 1) title = game.session.p2Cpu ? 'CPU WIN' : 'P2 WIN'
       ctx.fillText(title, LOGICAL_W / 2, 40)
 
-      if (data) {
-        const w = data.winner !== null ? data.world.fighters[data.winner] : data.world.fighters[0]
-        w.status = 'win'
-        w.anim = 'win'
+      if (data && data.winner !== null) {
+        const w = data.world.fighters[data.winner]
         const cam = createCam()
         cam.x = w.x - LOGICAL_W / 2
         drawFighter(ctx, w, cam, game.tick)

@@ -158,7 +158,7 @@ export function drawProjectiles(ctx: CanvasRenderingContext2D, world: FightWorld
       ctx.fillStyle = '#ffe27a'
       ctx.fillRect(p.facing === 1 ? -8 : -4, -1, 12, 3)
       ctx.fillStyle = '#fff4c8'
-      ctx.fillRect(p.facing === 1 ? -2 : -2, -2, 5, 5)
+      ctx.fillRect(p.facing === 1 ? -2 : -3, -2, 5, 5)
       ctx.restore()
     } else if (p.kind === 'gas') {
       ctx.save()

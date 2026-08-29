@@ -97,6 +97,8 @@ Each fighter has their own 90s chip theme. You can pick any theme, or Random. Th
 
 A standard gamepad works too. The first pad is P1. A second distinct pad is P2. Press a face button once to arm that pad (this ignores stick drift until then). Face buttons are LP / HP / LK / HK. The Start button also starts.
 
+On a phone or tablet, an on-screen d-pad and six buttons appear. They drive Player 1. Pinch-zoom stays available.
+
 ### Debug (optional)
 
 | Key | Effect |
@@ -122,6 +124,8 @@ Other scripts:
 npm test          # vitest, once
 npm run build     # typecheck + Vite production build
 npm run preview   # serve the production build locally
+npm run playtest  # browser screenshots; needs `npm run dev` on :5173
+npm run sprites -- --src /path/to/images
 npm run deploy    # build, then wrangler deploy
 ```
 
@@ -158,7 +162,8 @@ src/
   render/            sprites, stage, HUD, camera
 public/sprites/      per-character pose PNGs
 public/stage/        billabong, dojo, neonlab, armybase, toolshed
-scripts/process_sprites.py   chroma-key + pack generated art
+scripts/process_sprites.py   chroma-key + pack generated art (`--src`, `sprite_map.json`)
+scripts/playtest.mjs         headless cabinet walkthrough
 AGENTS.md            notes for coding agents
 ```
 

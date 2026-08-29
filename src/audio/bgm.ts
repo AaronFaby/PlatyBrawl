@@ -20,13 +20,19 @@ const BPM: Record<Track, number> = {
 
 type Kit = 'arcade' | 'stealth' | 'techno' | 'march' | 'grind' | 'hazard'
 
+const KIT: Record<Track, Kit> = {
+  title: 'arcade',
+  win: 'arcade',
+  bob: 'arcade',
+  ninja: 'stealth',
+  cyber: 'techno',
+  soldier: 'march',
+  chainsaw: 'grind',
+  toxic: 'hazard',
+}
+
 function kitFor(track: Track): Kit {
-  if (track === 'ninja') return 'stealth'
-  if (track === 'cyber') return 'techno'
-  if (track === 'soldier') return 'march'
-  if (track === 'chainsaw') return 'grind'
-  if (track === 'toxic') return 'hazard'
-  return 'arcade'
+  return KIT[track]
 }
 
 let trackGain: GainNode | null = null
@@ -478,7 +484,7 @@ function patternToxic(): { steps: number; hits: Hit[] } {
   return { steps, hits }
 }
 
-function pattern(track: Track): { steps: number; hits: Hit[] } {
+function buildPattern(track: Track): { steps: number; hits: Hit[] } {
   if (track === 'ninja') return patternNinja()
   if (track === 'cyber') return patternCyber()
   if (track === 'soldier') return patternSoldier()
@@ -487,12 +493,26 @@ function pattern(track: Track): { steps: number; hits: Hit[] } {
   return patternArcade(track)
 }
 
+const patternCache = new Map<Track, { steps: number; hits: Hit[] }>()
+
+function pattern(track: Track): { steps: number; hits: Hit[] } {
+  let p = patternCache.get(track)
+  if (!p) {
+    p = buildPattern(track)
+    patternCache.set(track, p)
+  }
+  return p
+}
+
 let timer = 0
 let current: Track | null = null
 let gen = 0
+let live = false
+let kickPending = false
 
 function scheduleLoop(track: Track, when: number, id: number): void {
   if (id !== gen) return
+  live = true
   const c = ac()
   const bpm = BPM[track]
   if (!bpm) return
@@ -512,24 +532,37 @@ function scheduleLoop(track: Track, when: number, id: number): void {
   timer = window.setTimeout(() => scheduleLoop(track, when + loopDur, id), delay)
 }
 
-function startTrack(track: Track, restart: boolean): void {
+function kickOffCurrent(): void {
+  if (live || kickPending || !current) return
+  const track = current
+  const id = gen
+  kickPending = true
+  const go = () => {
+    kickPending = false
+    if (id !== gen || current !== track) return
+    scheduleLoop(track, ac().currentTime + 0.08, id)
+  }
   const c = ac()
-  if (!restart && current === track) return
+  if (c.state === 'suspended') {
+    void c.resume().then(go, () => {
+      kickPending = false
+    })
+    return
+  }
+  go()
+}
+
+function startTrack(track: Track, restart: boolean): void {
+  ac()
+  if (!restart && current === track) {
+    kickOffCurrent()
+    return
+  }
   stopBgm()
   current = track
   gen += 1
-  const id = gen
   dest()
-  const kickOff = () => {
-    if (id !== gen) return
-    scheduleLoop(track, ac().currentTime + 0.08, id)
-  }
-  if (c.state === 'suspended') void c.resume().then(kickOff)
-  else kickOff()
-}
-
-export function playBgm(track: Track): void {
-  startTrack(track, false)
+  kickOffCurrent()
 }
 
 /** Restart this track from the top so a highlight always makes a sound. */
@@ -540,6 +573,8 @@ export function previewBgm(track: Track): void {
 export function stopBgm(): void {
   gen += 1
   current = null
+  live = false
+  kickPending = false
   killVoices()
   if (timer) {
     clearTimeout(timer)
@@ -549,8 +584,7 @@ export function stopBgm(): void {
 
 export function ensureBgm(track: Track): void {
   ac()
-  if (current === track && timer) return
-  startTrack(track, true)
+  startTrack(track, false)
 }
 
 /** Start the match theme once. Does not change mute. */

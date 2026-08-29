@@ -21,7 +21,3 @@ export function updateCam(cam: Cam, a: Fighter, b: Fighter): void {
   if (x > max) x = max
   cam.x += (x - cam.x) * 0.25
 }
-
-export function worldToScreen(cam: Cam, x: number, y: number): { x: number; y: number } {
-  return { x: x - cam.x, y: y - cam.y }
-}

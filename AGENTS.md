@@ -16,6 +16,8 @@ npm run dev       # http://localhost:5173/
 npm test          # vitest run, src/**/*.test.ts
 npm run build     # tsc && vite build
 npm run preview
+npm run playtest  # puppeteer screenshots; start `npm run dev` first
+npm run sprites -- --src /path/to/images   # chroma-key and pack poses
 npm run deploy    # build, then wrangler deploy
 ```
 
@@ -43,9 +45,9 @@ public/stage/        one home stage per fighter (960×540 jpg)
 
 **Sim versus view.** `startLoop` runs `step()` at 60 Hz and draws every animation frame. Match logic, hitboxes, and CPU plans belong in the sim. Drawing reads fighter state; it must not write gameplay state.
 
-**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty?, stageId?, bgmId? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session, including stage and music. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`. `stageId` may be `'random'` or a `StageId`. Random (or a missing value) picks one stage in `createMatch` and keeps it for every round of that match. Rematch with Random may pick a different stage. `bgmId` is a `CharId`; a missing value uses P1's theme. Preview and fight BGM must respect mute (`isMuted()` / the music bus). Do not call `setMuted(false)` or `hearMusic()` to start a match. Start the fight theme in versus; fight enter should `ensureBgm` only so the track is not restarted.
+**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty?, stageId?, bgmId? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session, including stage and music. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`. `stageId` may be `'random'` or a `StageId`. Random (or a missing value) picks one stage in `createMatch` and keeps it for every round of that match. Rematch with Random may pick a different stage. `bgmId` is a `CharId`; a missing value uses P1's theme. Preview and fight BGM must respect mute (`isMuted()` / the music bus). Do not call `setMuted(false)` to start a match. Start the fight theme in versus; fight enter should `ensureBgm` only so the track is not restarted.
 
-**Roster IDs.** `CHAR_IDS` in `src/config.ts` is the source of the `CharId` union. `ROSTER_ORDER` in `src/scenes/context.ts` is select/title order. Keep both in sync. Select wrap uses `ROSTER_ORDER.length`, not a hardcoded three.
+**Roster IDs.** `CHAR_IDS` in `src/config.ts` is the source of the `CharId` union. `ROSTER_ORDER` in `src/scenes/context.ts` is `CHAR_IDS`. Select wrap uses `ROSTER_ORDER.length`, not a hardcoded three.
 
 **Scenes.** Each scene is `{ id, enter, exit, update, draw }`. `game.switchTo(id)` exits the current scene and enters the next. Select goes to **arena** (stage + music). Arena defaults both cursors to Random and starts on the music column. Highlighting a music row calls `previewBgm` (respects mute). Versus calls `startFightBgm` once. Fight enter calls `ensureBgm` only so the track is not restarted. `drawMusicStatus` in `src/render/hud.ts` is painted from `main.ts` after every scene. Fight creates a new `FightWorld` on enter. Result receives `{ winner, world }`.
 
@@ -53,22 +55,22 @@ public/stage/        one home stage per fighter (960×540 jpg)
 
 Touch every layer. A missing one compiles in isolation and fails in play.
 
-1. **Id and meta** — Add the id to `CHAR_IDS` and `CHAR_META` in `src/config.ts`. Add it to `ROSTER_ORDER`.
-2. **Frame data** — New file `src/data/characters/<id>.ts` exporting a `CharDef`. Copy the normal set (stand / crouch / jump punches and kicks, throw) from an existing fighter. Give two specials (light + heavy each). Register in `src/data/roster.ts`.
+1. **Id and meta** — Add the id to `CHAR_IDS` and `CHAR_META` in `src/config.ts`. `ROSTER_ORDER` follows `CHAR_IDS`.
+2. **Frame data** — New file `src/data/characters/<id>.ts` exporting a `CharDef`. Copy the normal set (stand / crouch / jump punches and kicks, throw) from an existing fighter. Give two specials (light + heavy each) with a `pose` of `special1` or `special2`. Register in `src/data/roster.ts`.
 3. **Overlay copy** — `SPECIAL_LINES` and `MOVESET` in `src/data/moves.ts` must include the new id. Pause overlay and select footer read only those tables.
-4. **Sprites** — `public/sprites/<id>/` with `idle`, `walk`, `crouch`, `jump`, `punch`, `kick`, `hurt`, `win`, `special1`, `special2` (160×160, transparent), plus `portrait.png` (128×128). `poseForAnim` in `src/assets/manifest.ts` must map the special anim names to `special1` / `special2`.
+4. **Sprites** — `public/sprites/<id>/` with `idle`, `walk`, `crouch`, `jump`, `punch`, `kick`, `hurt`, `win`, `special1`, `special2` (160×160, transparent), plus `portrait.png` (128×128). Special anims map through the `pose` field on each `SpecialDef`.
 5. **Projectiles** — If the special fires a shot, add a kind to `AnimFlags.projectile`, `Projectile.kind`, `spawnFrom`, `FightHooks.spawnProjectile`, and `drawProjectiles`. Measure muzzle offset in sprite space (origin 80, 156, scale 0.7); do not reuse torso-height defaults.
-6. **CPU** — Teach `src/ai/cpu.ts` only motions that fighter defines. Do not queue Bob's DP (`[6, 2, 3]+P`) for anyone else. Charge specials must be one plan (hold back for `CHARGE_FRAMES +` a few ticks, then forward + button) so cooldown cannot dump the charge.
-7. **Fallback draw** — `src/render/platy.ts` still draws if a sprite is missing. Add colors / props for the new id.
+6. **CPU** — Add the id to `ANTI_AIR`, `LONG_FIRE`, and `LONG_PLAN` in `src/ai/cpu.ts`. Teach only motions that fighter defines. Do not queue Bob's DP (`[6, 2, 3]+P`) for anyone else. Charge specials must be one plan (hold back for `CHARGE_FRAMES +` a few ticks, then forward + button) so cooldown cannot dump the charge.
+7. **Fallback draw** — `src/render/platy.ts` still draws if a sprite is missing. Add a `PALETTE` row and an `EXTRAS` drawer for the new id.
 8. **Home stage** — New file `public/stage/<id>.jpg` at 960×540. Add the id to `STAGE_IDS` and `STAGE_META` in `src/data/stages.ts`, map it in `CHAR_STAGE`, and add a ground palette in `src/render/stage.ts`. Arena lists `STAGE_IDS` automatically.
-9. **Theme song** — Add a unique 90s-chip fight track keyed by the new `CharId` in `src/audio/bgm.ts` (`BPM`, `kitFor`, and a `pattern*` groove). Do not reuse Bob's arcade hook. Title and win stay shared. Arena lists `ROSTER_ORDER` as themes automatically.
+9. **Theme song** — Add a unique 90s-chip fight track keyed by the new `CharId` in `src/audio/bgm.ts` (`BPM`, `KIT`, and a `pattern*` groove). Do not reuse Bob's arcade hook. Title and win stay shared. Arena lists `ROSTER_ORDER` as themes automatically.
 10. **Tests** — At least one sim test for a signature special, plus roster coverage. `pickCpuOpponent` must never return P1's id. `CHAR_STAGE` must include the new id.
 
 Select and title iterate `ROSTER_ORDER` / `CHAR_IDS`. Sprite load iterates `CHAR_IDS` and `POSES`. Stage load iterates `STAGE_IDS`. You do not hand-edit the sprite bank object.
 
 ## Sprites
 
-`scripts/process_sprites.py` chroma-keys green and packs to 160×160, bottom-aligned, 4 px pad. Portraits are resized to 128×128 with **no** key (they keep the purple select background). The script's source image path is a leftover session folder; for new art, key and pack the same way rather than pointing at that old path.
+`scripts/process_sprites.py` chroma-keys green and packs to 160×160, bottom-aligned, 4 px pad. Portraits are resized to 128×128 with **no** key (they keep the purple select background). Pass `--src <dir>` and edit `scripts/sprite_map.json` when you add a fighter. Soldier / Chainsaw / Toxic art was packed outside this map; add rows when you re-process them.
 
 Draw:
 
@@ -83,14 +85,15 @@ World offset of sprite pixel `(px, py)` is `((px - 80) * 0.7, (py - 156) * 0.7)`
 ## Combat
 
 - Hurt / hit / push boxes are local to the fighter, facing-flipped in `worldBox`.
-- Specials are `SpecialDef` rows on the character: `{ motion, button, light, heavy }`. Motions: `qcf`, `qcb`, `dp`, `charge`. Charge needs `CHARGE_FRAMES` (40) of back, then forward + punch, with 14 frames of grace.
+- Specials are `SpecialDef` rows on the character: `{ motion, button, light, heavy, pose }`. `pose` is `special1` or `special2`. Motions: `qcf`, `qcb`, `dp`, `charge`. Charge needs `CHARGE_FRAMES` (40) of back, then forward + punch, with 14 frames of grace.
+- `MoveDef.cancelInto` is a whitelist of special move ids. `tryCancel` will not start a special that is not on that list.
 - Light versus heavy is the light versus heavy button on that punch/kick, not a separate motion.
 - Throw is **LP + LK** while close (`THROW_RANGE`).
 - Projectile kinds today: `shuriken` (ninja), `beam` (cyber plasma), `bullet` (soldier pistol, spawn `+58` facing / `-67` y so it leaves the muzzle), `chain` (chainsaw hook, spawn `+30` facing / `-46` y; on hit reels the defender in over several frames), `gas` (toxic bomb, spawn `+32` facing / `-40` y; unblocked hit applies poison DoT).
 - Anim flags can also set `invuln`, `invulnHead`, `armorHits`, `teleport`, `radBuff` (Toxic Meltdown: next unblocked damaging hit deals 2×).
 - Poison and Meltdown charges live on the fighter (`poisonLeft` / `radHits`) and clear on `resetFighter`.
 
-If you rename a move, update the character file, `moves.ts`, `poseForAnim`, and any CPU plan that hardcodes that motion.
+If you rename a move, update the character file, `moves.ts`, the special `pose` field, and any CPU plan that hardcodes that motion. `poseForAnim` reads specials off `CharDef`.
 
 ## CPU
 

@@ -1,0 +1,44 @@
+{
+  "sprites": [
+    ["2.jpg", "bob/idle.png"],
+    ["30.jpg", "bob/walk.png"],
+    ["10.jpg", "bob/crouch.png"],
+    ["8.jpg", "bob/jump.png"],
+    ["5.jpg", "bob/punch.png"],
+    ["6.jpg", "bob/kick.png"],
+    ["7.jpg", "bob/hurt.png"],
+    ["12.jpg", "bob/win.png"],
+    ["11.jpg", "bob/special1.png"],
+    ["15.jpg", "bob/special2.png"],
+    ["1.jpg", "ninja/idle.png"],
+    ["33.jpg", "ninja/walk.png"],
+    ["13.jpg", "ninja/crouch.png"],
+    ["22.jpg", "ninja/jump.png"],
+    ["16.jpg", "ninja/punch.png"],
+    ["14.jpg", "ninja/kick.png"],
+    ["21.jpg", "ninja/hurt.png"],
+    ["20.jpg", "ninja/win.png"],
+    ["17.jpg", "ninja/special1.png"],
+    ["18.jpg", "ninja/special2.png"],
+    ["3.jpg", "cyber/idle.png"],
+    ["35.jpg", "cyber/walk.png"],
+    ["28.jpg", "cyber/crouch.png"],
+    ["23.jpg", "cyber/jump.png"],
+    ["19.jpg", "cyber/punch.png"],
+    ["26.jpg", "cyber/kick.png"],
+    ["27.jpg", "cyber/hurt.png"],
+    ["29.jpg", "cyber/win.png"],
+    ["24.jpg", "cyber/special1.png"],
+    ["25.jpg", "cyber/special2.png"]
+  ],
+  "portraits": [
+    ["31.jpg", "bob/portrait.png"],
+    ["32.jpg", "ninja/portrait.png"],
+    ["34.jpg", "cyber/portrait.png"]
+  ],
+  "stages": [
+    ["9.jpg", "billabong.jpg"],
+    ["36.jpg", "dojo.jpg"],
+    ["37.jpg", "neonlab.jpg"]
+  ]
+}

@@ -5,7 +5,7 @@ import { ac, sfxLock, sfxSelect } from '../audio/sfx.ts'
 import { STAGE_IDS, STAGE_META, type StageId, type StagePick } from '../data/stages.ts'
 import { pickTheme, themeName } from '../data/themes.ts'
 import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
-import { bank } from '../render/sprite.ts'
+import { bank, loadAllStages } from '../render/sprite.ts'
 
 const STAGE_CHOICES: StagePick[] = ['random', ...STAGE_IDS]
 const MUSIC_CHOICES: Array<CharId | 'random'> = ['random', ...ROSTER_ORDER]
@@ -33,6 +33,7 @@ export function arenaScene(game: Game): Scene {
       prevH = 5
       prevV = 5
       hold = 0
+      loadAllStages()
       previewMusic(mi)
     },
     exit() {},

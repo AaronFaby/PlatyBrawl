@@ -10,7 +10,7 @@ import {
   WAKEUP_INVULN,
 } from '../config.ts'
 import { getChar } from '../data/roster.ts'
-import { createBuffer, matchMotion, pushDir } from '../input/buffer.ts'
+import { createBuffer, matchMotion, pushDir, resetBuffer } from '../input/buffer.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 import { emptyInput } from '../input/virtual.ts'
 import type { CharId } from '../config.ts'
@@ -98,10 +98,7 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.poisonEvery = 0
   f.poisonAcc = 0
   f.radHits = 0
-  f.buffer.events.length = 0
-  f.buffer.lastDir = 5
-  f.buffer.chargeBack = 0
-  f.buffer.chargeGrace = 0
+  resetBuffer(f.buffer)
 }
 
 export function currentFrame(f: Fighter): AnimFrame {
@@ -148,6 +145,10 @@ export function startMove(f: Fighter, moveId: string): void {
   f.moveId = moveId
   f.hasHit = false
   f.canCancel = false
+  if (moveId === 'throw') {
+    setAnim(f, move.anim, 'throw')
+    return
+  }
   const isSpecial = f.def.specials.some((s) => s.light === moveId || s.heavy === moveId)
   setAnim(f, move.anim, isSpecial ? 'special' : 'attack')
 }
@@ -222,7 +223,7 @@ function crouching(dir: number): boolean {
   return dir === 1 || dir === 2 || dir === 3
 }
 
-function trySpecial(f: Fighter, input: VirtualInput, hooks: FightHooks): boolean {
+function trySpecial(f: Fighter, input: VirtualInput, hooks: FightHooks, allow?: string[]): boolean {
   const punch = input.punchPress
   const kick = input.kickPress
   if (!punch && !kick) return false
@@ -232,11 +233,12 @@ function trySpecial(f: Fighter, input: VirtualInput, hooks: FightHooks): boolean
     const btnOk = spec.button === 'p' ? punch : kick
     if (!btnOk) continue
     if (!matchMotion(f.buffer, spec.motion, hooks.frame, f.facing)) continue
+    const id = (spec.button === 'p' ? heavyP : heavyK) ? spec.heavy : spec.light
+    if (allow && !allow.includes(id)) continue
     if (spec.motion === 'charge') {
       f.buffer.chargeBack = 0
       f.buffer.chargeGrace = 0
     }
-    const id = (spec.button === 'p' ? heavyP : heavyK) ? spec.heavy : spec.light
     startMove(f, id)
     return true
   }
@@ -259,7 +261,7 @@ function tryThrow(f: Fighter, input: VirtualInput, other: Fighter): boolean {
   other.moveId = null
   other.stun = 20
   other.pendingKd = true
-  let throwDmg = 140
+  let throwDmg = f.def.moves.throw?.damage ?? 140
   if (f.radHits > 0) {
     throwDmg *= 2
     f.radHits = 0
@@ -327,7 +329,7 @@ function tryCancel(f: Fighter, input: VirtualInput, hooks: FightHooks): void {
   if (!move?.cancelInto?.length) return
   const fr = currentFrame(f)
   if (!fr.hit && f.frameIndex === 0) return
-  if (trySpecial(f, input, hooks)) return
+  if (trySpecial(f, input, hooks, move.cancelInto)) return
 }
 
 function locomotion(f: Fighter, input: VirtualInput, locked: boolean): void {
@@ -498,7 +500,7 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
   handleRadBuff(f)
 
   if (airborne(f) || f.vy < 0) f.vy += GRAVITY
-  if (f.status === 'idle' || f.status === 'crouch' || f.status === 'block') f.vx = 0
+  if (f.status === 'idle' || f.status === 'crouch' || (f.status === 'block' && f.stun <= 0)) f.vx = 0
 
   if (f.reel > 0) {
     f.vx = 0

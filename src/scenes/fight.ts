@@ -1,4 +1,3 @@
-import { LOGICAL_H, LOGICAL_W } from '../config.ts'
 import { createCpu, resetCpu, tickCpu } from '../ai/cpu.ts'
 import { clearKeys } from '../input/devices.ts'
 import { emptyInput } from '../input/virtual.ts'
@@ -11,6 +10,7 @@ import { drawDebug } from '../render/debug.ts'
 import { drawHud, drawMovesOverlay, drawProjectiles, drawSparks } from '../render/hud.ts'
 import { drawFighter } from '../render/platy.ts'
 import { drawStage } from '../render/stage.ts'
+import { loadStage } from '../render/sprite.ts'
 import type { Game, Scene } from './context.ts'
 
 export function fightScene(game: Game): Scene {
@@ -26,6 +26,7 @@ export function fightScene(game: Game): Scene {
     id: 'fight',
     enter() {
       world = createMatch(game.session)
+      loadStage(world.match.stageId)
       game.world = world
       game.cam = createCam()
       game.cpu = createCpu(game.session.cpuDifficulty ?? 'normal')
@@ -95,8 +96,6 @@ export function fightScene(game: Game): Scene {
       drawHud(ctx, world, game.tick)
       if (game.devices.debugHitboxes) drawDebug(ctx, world, game.cam)
       if (paused) drawMovesOverlay(ctx, world)
-      void LOGICAL_W
-      void LOGICAL_H
     },
   }
 }

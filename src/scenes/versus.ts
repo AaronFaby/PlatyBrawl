@@ -2,7 +2,7 @@ import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W } from '../config.ts'
 import { startFightBgm } from '../audio/bgm.ts'
 import { fightTrack } from '../data/themes.ts'
 import { sfxStart } from '../audio/sfx.ts'
-import { getPortrait } from '../render/sprite.ts'
+import { getPortrait, loadAllStages } from '../render/sprite.ts'
 import type { Game, Scene } from './context.ts'
 
 export function versusScene(game: Game): Scene {
@@ -13,6 +13,7 @@ export function versusScene(game: Game): Scene {
       ticks = 0
       sfxStart()
       startFightBgm(fightTrack(game.session))
+      void loadAllStages()
     },
     exit() {},
     update() {

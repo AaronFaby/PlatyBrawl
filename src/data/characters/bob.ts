@@ -273,7 +273,7 @@ export const bob: CharDef = {
     },
   },
   specials: [
-    { motion: 'dp', button: 'p', light: 'venomSpurL', heavy: 'venomSpurH' },
-    { motion: 'qcf', button: 'p', light: 'billDrillL', heavy: 'billDrillH' },
+    { motion: 'dp', button: 'p', light: 'venomSpurL', heavy: 'venomSpurH', pose: 'special2' },
+    { motion: 'qcf', button: 'p', light: 'billDrillL', heavy: 'billDrillH', pose: 'special1' },
   ],
 }

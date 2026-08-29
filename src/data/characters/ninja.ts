@@ -250,7 +250,7 @@ export const ninja: CharDef = {
     },
   },
   specials: [
-    { motion: 'qcf', button: 'p', light: 'shurikenL', heavy: 'shurikenH' },
-    { motion: 'qcb', button: 'k', light: 'shadowStepL', heavy: 'shadowStepH' },
+    { motion: 'qcf', button: 'p', light: 'shurikenL', heavy: 'shurikenH', pose: 'special1' },
+    { motion: 'qcb', button: 'k', light: 'shadowStepL', heavy: 'shadowStepH', pose: 'special2' },
   ],
 }

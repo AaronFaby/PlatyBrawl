@@ -66,6 +66,7 @@ function startRound(world: FightWorld, round: number): void {
   world.match.projectiles = []
   world.match.announce = `ROUND ${round}`
   world.match.timeout = false
+  world.match.winner = null
   world.fighters[0].hp = MAX_HP
   world.fighters[1].hp = MAX_HP
 }
@@ -116,8 +117,7 @@ export function tickMatch(
       match.phaseTicks = 0
       match.announce = 'K.O.'
       if (ko0 && ko1) {
-        // double KO — higher remaining wins already 0; treat as draw round (no win)
-        match.winner = fighters[0].hp === fighters[1].hp ? null : fighters[0].hp > fighters[1].hp ? 0 : 1
+        match.winner = null
       } else {
         match.winner = ko0 ? 1 : 0
       }

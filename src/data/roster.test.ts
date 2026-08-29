@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { CHAR_IDS } from '../config.ts'
+import type { MotionKind } from '../fight/types.ts'
+import { SPECIAL_LINES } from './moves.ts'
 import { getChar, pickCpuOpponent } from './roster.ts'
+
+const MOTION_TAG: Record<MotionKind, string> = {
+  qcf: 'QCF',
+  qcb: 'QCB',
+  dp: 'DP',
+  charge: 'CHARGE',
+}
 
 describe('pickCpuOpponent', () => {
   it('never mirrors the player', () => {
@@ -37,5 +46,24 @@ describe('pickCpuOpponent', () => {
     expect(tox.specials.some((s) => s.light === 'meltDownL')).toBe(true)
     expect(tox.moves.standLP).toBeTruthy()
     expect(tox.moves.standHK).toBeTruthy()
+  })
+
+  it('lists one special line per declared special', () => {
+    for (const id of CHAR_IDS) {
+      expect(SPECIAL_LINES[id], id).toHaveLength(getChar(id).specials.length)
+    }
+  })
+
+  it('tags each special line with the authored motion', () => {
+    for (const id of CHAR_IDS) {
+      const def = getChar(id)
+      for (const spec of def.specials) {
+        const tag = MOTION_TAG[spec.motion]
+        expect(
+          SPECIAL_LINES[id].some((line) => line.includes(tag)),
+          `${id} missing ${tag}`,
+        ).toBe(true)
+      }
+    }
   })
 })

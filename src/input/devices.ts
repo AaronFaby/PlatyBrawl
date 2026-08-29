@@ -1,4 +1,5 @@
 import { toggleMute } from '../audio/sfx.ts'
+import { applyTouch } from './touch.ts'
 
 const MOVE_CODES = new Set([
   'KeyA',
@@ -76,6 +77,7 @@ export type DeviceState = {
   debugDummyBlock: boolean
   debugPause: boolean
   pauseAdvance: boolean
+  touch: RawStick
 }
 
 export function createDevices(): DeviceState {
@@ -117,6 +119,7 @@ export function createDevices(): DeviceState {
     debugDummyBlock: false,
     debugPause: false,
     pauseAdvance: false,
+    touch: emptyStick(),
   }
   return devices
 }
@@ -212,6 +215,7 @@ export function readP1(devices: DeviceState): RawStick {
   if (d.has('KeyK')) s.hk = true
   if (d.has('Enter') || d.has('Space')) s.start = true
   applyPad(s, devices.padArmed[0] ? devices.pads[0] : null)
+  applyTouch(s, devices.touch)
   return s
 }
 

@@ -35,6 +35,34 @@ export function emptyInput(): VirtualInput {
   }
 }
 
+export function latchPresses(into: VirtualInput, sample: VirtualInput): void {
+  into.lpPress ||= sample.lpPress
+  into.hpPress ||= sample.hpPress
+  into.lkPress ||= sample.lkPress
+  into.hkPress ||= sample.hkPress
+  into.startPress ||= sample.startPress
+  into.punchPress = into.lpPress || into.hpPress
+  into.kickPress = into.lkPress || into.hkPress
+}
+
+export function withLatchedPresses(sample: VirtualInput, latch: VirtualInput): VirtualInput {
+  const lpPress = sample.lpPress || latch.lpPress
+  const hpPress = sample.hpPress || latch.hpPress
+  const lkPress = sample.lkPress || latch.lkPress
+  const hkPress = sample.hkPress || latch.hkPress
+  const startPress = sample.startPress || latch.startPress
+  return {
+    ...sample,
+    lpPress,
+    hpPress,
+    lkPress,
+    hkPress,
+    startPress,
+    punchPress: lpPress || hpPress,
+    kickPress: lkPress || hkPress,
+  }
+}
+
 export function stickToVirtual(stick: RawStick, prev: VirtualInput): VirtualInput {
   const h = (stick.right ? 1 : 0) - (stick.left ? 1 : 0)
   const v = (stick.up ? 1 : 0) - (stick.down ? 1 : 0)

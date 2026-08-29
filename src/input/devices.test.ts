@@ -25,6 +25,7 @@ function mockDevices(keys: string[], pads: DeviceState['pads'] = [null, null]): 
     debugDummyBlock: false,
     debugPause: false,
     pauseAdvance: false,
+    touch: emptyStick(),
   }
 }
 

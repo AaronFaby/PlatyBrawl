@@ -110,6 +110,7 @@ function applyHit(
     return
   }
 
+  // Super armor: eat the hit. No damage and no hitstun.
   if (victim.armorLeft > 0) {
     victim.armorLeft -= 1
     victim.flash = 4
@@ -152,7 +153,7 @@ function applyHit(
 }
 
 function inputCrouchAnim(f: Fighter): string {
-  return f.y >= 229 && (f.anim === 'crouch' || f.anim === 'crouchBlock') ? 'crouchBlock' : 'block'
+  return grounded(f) && (f.anim === 'crouch' || f.anim === 'crouchBlock') ? 'crouchBlock' : 'block'
 }
 
 function hurtWorld(f: Fighter): Box[] {

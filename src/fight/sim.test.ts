@@ -342,4 +342,223 @@ describe('match sim', () => {
     expect(world.fighters[1].hp).toBe(0)
     expect(['ko', 'timeout', 'over', 'intro', 'fight']).toContain(world.match.phase)
   })
+
+  it('blocked hits deal no damage and last onBlockStun frames', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 28
+    const jab = hold(emptyInput(), { lp: true })
+    let p2 = tap({ dir: 6 })
+    tickMatch(world, [jab, p2], false)
+    p2 = hold(p2, { dir: 6 })
+    skip(world, 8, emptyInput(), p2)
+    expect(world.fighters[1].hp).toBe(1000)
+    expect(world.fighters[1].status).toBe('block')
+    expect(world.fighters[1].stun).toBeGreaterThan(0)
+    skip(world, world.fighters[1].stun + 2, emptyInput(), p2)
+    expect(world.fighters[1].status).not.toBe('block')
+  })
+
+  it('low attacks must be blocked crouching', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 28
+    const sweep = hold(emptyInput(), { hk: true, dir: 2 })
+    let p2 = tap({ dir: 6 })
+    tickMatch(world, [sweep, p2], false)
+    skip(world, 12, emptyInput(), hold(p2, { dir: 6 }))
+    expect(world.fighters[1].hp).toBeLessThan(1000)
+
+    const world2 = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world2, 120)
+    world2.fighters[1].x = world2.fighters[0].x + 28
+    const sweep2 = hold(emptyInput(), { hk: true, dir: 2 })
+    let p2c = tap({ dir: 3 })
+    tickMatch(world2, [sweep2, p2c], false)
+    skip(world2, 12, emptyInput(), hold(p2c, { dir: 3 }))
+    expect(world2.fighters[1].hp).toBe(1000)
+    expect(world2.fighters[1].status).toBe('block')
+  })
+
+  it('air attacks are unblockable', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[0].y = 180
+    world.fighters[0].vy = -1
+    world.fighters[0].status = 'jump'
+    world.fighters[0].anim = 'jump'
+    world.fighters[1].x = world.fighters[0].x + 28
+    const air = hold(emptyInput(), { hk: true })
+    const p2 = tap({ dir: 6 })
+    tickMatch(world, [air, p2], false)
+    skip(world, 16, emptyInput(), hold(p2, { dir: 6 }))
+    expect(world.fighters[1].hp).toBeLessThan(1000)
+  })
+
+  it('blocked heavy pushback displaces further than a blocked jab', () => {
+    const jabWorld = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(jabWorld, 120)
+    jabWorld.fighters[1].x = jabWorld.fighters[0].x + 28
+    const startJ = jabWorld.fighters[1].x
+    const jab = hold(emptyInput(), { lp: true })
+    let p2j = tap({ dir: 6 })
+    tickMatch(jabWorld, [jab, p2j], false)
+    p2j = hold(p2j, { dir: 6 })
+    skip(jabWorld, 20, emptyInput(), p2j)
+    const jabPush = Math.abs(jabWorld.fighters[1].x - startJ)
+
+    const hpWorld = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(hpWorld, 120)
+    hpWorld.fighters[1].x = hpWorld.fighters[0].x + 28
+    const startH = hpWorld.fighters[1].x
+    const hp = hold(emptyInput(), { hp: true })
+    let p2h = tap({ dir: 6 })
+    tickMatch(hpWorld, [hp, p2h], false)
+    p2h = hold(p2h, { dir: 6 })
+    skip(hpWorld, 24, emptyInput(), p2h)
+    const hpPush = Math.abs(hpWorld.fighters[1].x - startH)
+    expect(hpPush).toBeGreaterThan(jabPush)
+    expect(jabPush).toBeGreaterThan(0)
+  })
+
+  it('throw requires LP+LK in range on the ground', () => {
+    const miss = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(miss, 120)
+    miss.fighters[1].x = miss.fighters[0].x + 80
+    tickMatch(miss, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(miss.fighters[0].status).not.toBe('throw')
+    expect(miss.fighters[1].hp).toBe(1000)
+
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 24
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).toBe('throw')
+    expect(world.fighters[1].hp).toBe(860)
+  })
+
+  it('refuses a throw against knockdown or an airborne foe', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 24
+    world.fighters[1].status = 'knockdown'
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).not.toBe('throw')
+
+    world.fighters[1].status = 'idle'
+    world.fighters[1].y = 180
+    world.fighters[1].vy = -2
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).not.toBe('throw')
+  })
+
+  it('Meltdown doubles throw damage and is consumed', () => {
+    const world = createMatch({ p1: 'toxic', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[0].radHits = 1
+    world.fighters[1].x = world.fighters[0].x + 24
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[1].hp).toBe(720)
+    expect(world.fighters[0].radHits).toBe(0)
+  })
+
+  it('knockdown goes through wakeup invuln', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 28
+    const sweep = hold(emptyInput(), { hk: true, dir: 2 })
+    tickMatch(world, [sweep, emptyInput()], false)
+    for (let i = 0; i < 120 && world.fighters[1].status !== 'knockdown'; i++) {
+      tickMatch(world, [emptyInput(), emptyInput()], false)
+    }
+    expect(world.fighters[1].status).toBe('knockdown')
+    for (let i = 0; i < 40 && world.fighters[1].status !== 'wakeup'; i++) {
+      tickMatch(world, [emptyInput(), emptyInput()], false)
+    }
+    expect(world.fighters[1].status).toBe('wakeup')
+    expect(world.fighters[1].wakeupInvuln).toBeGreaterThan(0)
+    const hp = world.fighters[1].hp
+    world.fighters[1].x = world.fighters[0].x + 28
+    tickMatch(world, [hold(emptyInput(), { lp: true }), emptyInput()], false)
+    skip(world, 8)
+    expect(world.fighters[1].hp).toBe(hp)
+  })
+
+  it('timeout awards the higher HP fighter and draws on equal HP', () => {
+    const win = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(win, 120)
+    win.fighters[1].hp = 400
+    win.match.timer = 0
+    tickMatch(win, [emptyInput(), emptyInput()], false)
+    expect(win.match.phase).toBe('timeout')
+    expect(win.match.winner).toBe(0)
+
+    const draw = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(draw, 120)
+    draw.match.timer = 0
+    tickMatch(draw, [emptyInput(), emptyInput()], false)
+    expect(draw.match.phase).toBe('timeout')
+    expect(draw.match.winner).toBeNull()
+  })
+
+  it('double KO is a draw round and startRound clears winner', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[0].hp = 0
+    world.fighters[1].hp = 0
+    tickMatch(world, [emptyInput(), emptyInput()], false)
+    expect(world.match.phase).toBe('ko')
+    expect(world.match.winner).toBeNull()
+    skip(world, 170)
+    expect(world.match.round).toBe(2)
+    expect(world.match.phase).toBe('intro')
+    expect(world.match.winner).toBeNull()
+  })
+
+  it('armor absorbs a hit with no damage and no hitstun', () => {
+    const world = createMatch({ p1: 'bob', p2: 'cyber', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 28
+    world.fighters[1].armorLeft = 1
+    tickMatch(world, [hold(emptyInput(), { lp: true }), emptyInput()], false)
+    skip(world, 8)
+    expect(world.fighters[1].hp).toBe(1000)
+    expect(world.fighters[1].status).not.toBe('hurt')
+    expect(world.fighters[1].armorLeft).toBe(0)
+  })
+
+  it('cancelInto is a whitelist of specials', () => {
+    const world = createMatch({ p1: 'chainsaw', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 30
+    let p1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      p1 = hold(p1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    skip(world, 20)
+    expect(world.fighters[0].canCancel).toBe(true)
+    let again = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      again = hold(again, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(world, [again, emptyInput()], false)
+    }
+    expect(world.fighters[0].moveId?.startsWith('chainHook')).toBe(true)
+
+    const slash = createMatch({ p1: 'chainsaw', p2: 'bob', p2Cpu: false })
+    skip(slash, 120)
+    slash.fighters[1].x = slash.fighters[0].x + 30
+    let s1 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      s1 = hold(s1, { dir, lp: dir === 6, lpPress: dir === 6, punchPress: dir === 6 })
+      tickMatch(slash, [s1, emptyInput()], false)
+    }
+    skip(slash, 20)
+    let s2 = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      s2 = hold(s2, { dir, hk: dir === 6, hkPress: dir === 6, kickPress: dir === 6 })
+      tickMatch(slash, [s2, emptyInput()], false)
+    }
+    expect(slash.fighters[0].moveId?.startsWith('sawSlash')).toBe(true)
+  })
 })

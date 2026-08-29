@@ -90,7 +90,7 @@ export function strike(opts: {
     height: opts.height,
     cancelInto: opts.cancelInto,
     pushHit: opts.pushHit,
-    pushBlock: opts.pushBlock,
+    pushBlock: opts.pushBlock ?? (opts.pushHit != null ? opts.pushHit * 0.7 : undefined),
   }
   return { anim, move }
 }

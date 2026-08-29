@@ -257,7 +257,7 @@ export const chainsaw: CharDef = {
     },
   },
   specials: [
-    { motion: 'qcf', button: 'p', light: 'chainHookL', heavy: 'chainHookH' },
-    { motion: 'qcf', button: 'k', light: 'sawSlashL', heavy: 'sawSlashH' },
+    { motion: 'qcf', button: 'p', light: 'chainHookL', heavy: 'chainHookH', pose: 'special1' },
+    { motion: 'qcf', button: 'k', light: 'sawSlashL', heavy: 'sawSlashH', pose: 'special2' },
   ],
 }

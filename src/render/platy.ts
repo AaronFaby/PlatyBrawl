@@ -1,5 +1,5 @@
 import type { CharId } from '../config.ts'
-import { currentFrame } from '../fight/fighter.ts'
+import { currentFrame, airborne, grounded } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
 import type { Cam } from './camera.ts'
 import { drawSpriteFighter } from './sprite.ts'
@@ -36,7 +36,7 @@ function poseFrom(f: Fighter, cell: number): Pose {
   if (f.status === 'crouch' || f.status === 'land' || f.anim === 'crouchBlock' || f.anim.startsWith('crouch')) {
     p.squat = 0.7
   }
-  if (f.status === 'jump' || f.y < 229) p.air = 1
+  if (f.status === 'jump' || airborne(f)) p.air = 1
   if (f.status === 'hurt' || f.status === 'ko') p.hurt = 1
   if (f.status === 'knockdown' || f.status === 'ko' && f.frameIndex > 0) {
     p.hurt = 1
@@ -121,7 +121,7 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   ctx.ellipse(0, 2, 16 - squat * 4, 4, 0, 0, Math.PI * 2)
   ctx.fill()
 
-  if (f.status === 'knockdown' || (f.status === 'ko' && f.y >= 229)) {
+  if (f.status === 'knockdown' || (f.status === 'ko' && grounded(f))) {
     drawDowned(ctx, id)
     return
   }
@@ -152,11 +152,7 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   ctx.lineWidth = 1.5
   ctx.stroke()
 
-  if (id === 'ninja') drawGi(ctx, bodyY, bodyH)
-  if (id === 'cyber') drawCyber(ctx, bodyY)
-  if (id === 'soldier') drawSoldier(ctx, bodyY)
-  if (id === 'chainsaw') drawChainsaw(ctx, bodyY)
-  if (id === 'toxic') drawHazmat(ctx, bodyY)
+  EXTRAS[id](ctx, bodyY, bodyH)
 
   if (f.radHits > 0) {
     ctx.save()
@@ -324,36 +320,38 @@ function drawSoldier(ctx: CanvasRenderingContext2D, bodyY: number): void {
   ctx.fillRect(-6, bodyY + 6, 5, 8)
 }
 
+type Palette = { body: string; bill: string; tail: string; foot: string }
+
+const PALETTE: Record<CharId, Palette> = {
+  bob: { body: '#f0d8a8', bill: '#1a1210', tail: '#1a1210', foot: '#1a1010' },
+  ninja: { body: '#7a4a28', bill: '#1a1210', tail: '#4a2a18', foot: '#1a1010' },
+  cyber: { body: '#e6d2a8', bill: '#5a6570', tail: '#6a7a88', foot: '#8aa0b0' },
+  soldier: { body: '#c8b080', bill: '#1a1210', tail: '#3a2a18', foot: '#2a2418' },
+  chainsaw: { body: '#8a8a92', bill: '#c8c8d0', tail: '#4a4a50', foot: '#3a3a40' },
+  toxic: { body: '#d8c43a', bill: '#3a3a40', tail: '#c8b030', foot: '#2a2a28' },
+}
+
+const EXTRAS: Record<CharId, (ctx: CanvasRenderingContext2D, bodyY: number, bodyH: number) => void> = {
+  bob: () => {},
+  ninja: (ctx, bodyY, bodyH) => drawGi(ctx, bodyY, bodyH),
+  cyber: (ctx, bodyY) => drawCyber(ctx, bodyY),
+  soldier: (ctx, bodyY) => drawSoldier(ctx, bodyY),
+  chainsaw: (ctx, bodyY) => drawChainsaw(ctx, bodyY),
+  toxic: (ctx, bodyY) => drawHazmat(ctx, bodyY),
+}
+
 function bodyColor(id: CharId): string {
-  if (id === 'ninja') return '#7a4a28'
-  if (id === 'cyber') return '#e6d2a8'
-  if (id === 'soldier') return '#c8b080'
-  if (id === 'chainsaw') return '#8a8a92'
-  if (id === 'toxic') return '#d8c43a'
-  return '#f0d8a8'
+  return PALETTE[id].body
 }
 
 function billColor(id: CharId): string {
-  if (id === 'cyber') return '#5a6570'
-  if (id === 'chainsaw') return '#c8c8d0'
-  if (id === 'toxic') return '#3a3a40'
-  return '#1a1210'
+  return PALETTE[id].bill
 }
 
 function tailColor(id: CharId): string {
-  if (id === 'cyber') return '#6a7a88'
-  if (id === 'ninja') return '#4a2a18'
-  if (id === 'soldier') return '#3a2a18'
-  if (id === 'chainsaw') return '#4a4a50'
-  if (id === 'toxic') return '#c8b030'
-  return '#1a1210'
+  return PALETTE[id].tail
 }
 
 function footColor(id: CharId): string {
-  if (id === 'cyber') return '#8aa0b0'
-  if (id === 'ninja') return '#1a1010'
-  if (id === 'soldier') return '#2a2418'
-  if (id === 'chainsaw') return '#3a3a40'
-  if (id === 'toxic') return '#2a2a28'
-  return '#1a1210'
+  return PALETTE[id].foot
 }

@@ -48,14 +48,6 @@ export function isMuted(): boolean {
   return muted
 }
 
-/** Open the music bus so a sample is audible even if mute is on. */
-export function hearMusic(): void {
-  ac()
-  if (!musicBus || !ctx) return
-  musicBus.gain.cancelScheduledValues(ctx.currentTime)
-  musicBus.gain.setTargetAtTime(MUSIC_GAIN, ctx.currentTime, 0.03)
-}
-
 export function applyMusicGain(): void {
   if (!musicBus || !ctx) return
   musicBus.gain.cancelScheduledValues(ctx.currentTime)

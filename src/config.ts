@@ -13,7 +13,6 @@ export const GRAVITY = 0.28
 export const THROW_RANGE = 34
 export const REEL_SPEED = 6
 export const REEL_STOP = 32
-export const THROW_DAMAGE = 140
 export const WAKEUP_INVULN = 6
 export const LAND_RECOVERY = 4
 export const CHARGE_FRAMES = 40

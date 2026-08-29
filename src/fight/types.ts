@@ -54,6 +54,7 @@ export type SpecialDef = {
   button: 'p' | 'k'
   light: string
   heavy: string
+  pose: 'special1' | 'special2'
 }
 
 export type CharDef = {

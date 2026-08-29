@@ -16,16 +16,14 @@ export function clampStage(f: Fighter): void {
 }
 
 export function resolvePush(a: Fighter, b: Fighter): void {
-  if (!grounded(a) && !grounded(b)) return
+  if (!grounded(a) || !grounded(b)) return
   const fa = currentFrame(a)
   const fb = currentFrame(b)
   const pa = worldBox(fa.push, a.x, a.y, a.facing)
   const pb = worldBox(fb.push, b.x, b.y, b.facing)
   const overlap = Math.min(pa.x + pa.w, pb.x + pb.w) - Math.max(pa.x, pb.x)
   if (overlap <= 0) return
-  const mid = (pa.x + pa.w / 2 + pb.x + pb.w / 2) / 2
   const aLeft = a.x <= b.x
-  let push = overlap / 2 + 0.5
   const left = aLeft ? a : b
   const right = aLeft ? b : a
   const leftAtWall = left.x <= STAGE_PAD + 0.5
@@ -35,10 +33,10 @@ export function resolvePush(a: Fighter, b: Fighter): void {
   } else if (rightAtWall && !leftAtWall) {
     left.x -= overlap + 0.5
   } else {
+    const push = overlap / 2 + 0.5
     left.x -= push
     right.x += push
   }
-  void mid
   clampStage(a)
   clampStage(b)
 }

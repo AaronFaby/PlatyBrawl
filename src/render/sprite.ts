@@ -1,7 +1,7 @@
 import type { CharId } from '../config.ts'
 import { CHAR_IDS } from '../config.ts'
 import { STAGE_IDS, stageUrl, type StageId } from '../data/stages.ts'
-import { currentFrame } from '../fight/fighter.ts'
+import { currentFrame, grounded } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
 import {
   POSES,
@@ -35,7 +35,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   })
 }
 
-export async function loadSprites(): Promise<void> {
+async function loadCharSprites(): Promise<void> {
   const jobs: Promise<void>[] = []
   for (const id of CHAR_IDS) {
     for (const pose of [...POSES, 'portrait'] as const) {
@@ -46,19 +46,29 @@ export async function loadSprites(): Promise<void> {
       )
     }
   }
-  for (const id of STAGE_IDS) {
-    jobs.push(
-      loadImage(stageUrl(id)).then((img) => {
-        if (img) bank.stages[id] = img
-      }),
-    )
-  }
   await Promise.all(jobs)
+}
+
+export function loadStage(id: StageId): Promise<void> {
+  if (bank.stages[id]) return Promise.resolve()
+  return loadImage(stageUrl(id)).then((img) => {
+    if (img) bank.stages[id] = img
+  })
+}
+
+export function loadAllStages(): Promise<void> {
+  return Promise.all(STAGE_IDS.map((id) => loadStage(id))).then(() => undefined)
+}
+
+export async function loadSprites(): Promise<void> {
+  const stages = loadAllStages()
+  await loadCharSprites()
   bank.ready = true
+  void stages
 }
 
 export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam: Cam): boolean {
-  const pose = poseForAnim(f.anim, currentFrame(f).cell)
+  const pose = poseForAnim(f.anim, currentFrame(f).cell, f.charId)
   const img = bank.chars[f.charId][pose] ?? bank.chars[f.charId].idle
   if (!img) return false
   const x = f.x - cam.x
@@ -66,7 +76,7 @@ export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam
   ctx.save()
   ctx.translate(Math.round(x), Math.round(y))
   ctx.scale(f.facing * SPRITE_SCALE, SPRITE_SCALE)
-  if (f.status === 'knockdown' || (f.status === 'ko' && f.y >= 229)) ctx.rotate(-1.2)
+  if (f.status === 'knockdown' || (f.status === 'ko' && grounded(f))) ctx.rotate(-1.2)
   if (f.radHits > 0) {
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'

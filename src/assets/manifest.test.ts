@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { CHAR_IDS } from '../config.ts'
+import { getChar } from '../data/roster.ts'
 import { poseForAnim } from './manifest.ts'
 
 describe('pose mapping', () => {
@@ -13,17 +15,31 @@ describe('pose mapping', () => {
   })
 
   it('maps soldier specials to the pistol and rush poses', () => {
-    expect(poseForAnim('pistolShotL', 1)).toBe('special1')
-    expect(poseForAnim('pistolShotH', 0)).toBe('special1')
-    expect(poseForAnim('combatRushL', 1)).toBe('special2')
+    expect(poseForAnim('pistolShotL', 1, 'soldier')).toBe('special1')
+    expect(poseForAnim('pistolShotH', 0, 'soldier')).toBe('special1')
+    expect(poseForAnim('combatRushL', 1, 'soldier')).toBe('special2')
     expect(poseForAnim('standLP', 1)).toBe('punch')
     expect(poseForAnim('standHK', 1)).toBe('kick')
   })
 
   it('maps chainsaw specials to the hook and slash poses', () => {
-    expect(poseForAnim('chainHookL', 1)).toBe('special1')
-    expect(poseForAnim('chainHookH', 0)).toBe('special1')
-    expect(poseForAnim('sawSlashL', 1)).toBe('special2')
-    expect(poseForAnim('sawSlashH', 0)).toBe('special2')
+    expect(poseForAnim('chainHookL', 1, 'chainsaw')).toBe('special1')
+    expect(poseForAnim('chainHookH', 0, 'chainsaw')).toBe('special1')
+    expect(poseForAnim('sawSlashL', 1, 'chainsaw')).toBe('special2')
+    expect(poseForAnim('sawSlashH', 0, 'chainsaw')).toBe('special2')
+  })
+
+  it('maps every special anim to a special pose', () => {
+    for (const id of CHAR_IDS) {
+      const def = getChar(id)
+      for (const spec of def.specials) {
+        for (const moveId of [spec.light, spec.heavy]) {
+          const anim = def.moves[moveId].anim
+          const pose = poseForAnim(anim, 1, id)
+          expect(pose, `${id}:${anim}`).toMatch(/^special[12]$/)
+          expect(pose).toBe(spec.pose)
+        }
+      }
+    }
   })
 })

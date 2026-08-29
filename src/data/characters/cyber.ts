@@ -253,7 +253,7 @@ export const cyber: CharDef = {
     },
   },
   specials: [
-    { motion: 'charge', button: 'p', light: 'plasmaL', heavy: 'plasmaH' },
-    { motion: 'qcf', button: 'k', light: 'rocketKneeL', heavy: 'rocketKneeH' },
+    { motion: 'charge', button: 'p', light: 'plasmaL', heavy: 'plasmaH', pose: 'special1' },
+    { motion: 'qcf', button: 'k', light: 'rocketKneeL', heavy: 'rocketKneeH', pose: 'special2' },
   ],
 }

@@ -8,6 +8,7 @@ export type View = {
   scale: number
   ox: number
   oy: number
+  scan: CanvasPattern | null
 }
 
 export function createView(canvas: HTMLCanvasElement): View {
@@ -18,7 +19,7 @@ export function createView(canvas: HTMLCanvasElement): View {
   buffer.height = LOGICAL_H
   const btx = buffer.getContext('2d')
   if (!btx) throw new Error('no buffer')
-  const view: View = { canvas, ctx, buffer, btx, scale: 1, ox: 0, oy: 0 }
+  const view: View = { canvas, ctx, buffer, btx, scale: 1, ox: 0, oy: 0, scan: null }
   resizeView(view)
   window.addEventListener('resize', () => resizeView(view))
   return view
@@ -48,6 +49,20 @@ export function resizeView(view: View): void {
   c.webkitImageSmoothingEnabled = false
   c.mozImageSmoothingEnabled = false
   view.btx.imageSmoothingEnabled = false
+  view.scan = makeScanPattern(view.ctx, view.scale)
+}
+
+function makeScanPattern(ctx: CanvasRenderingContext2D, scale: number): CanvasPattern | null {
+  const line = Math.max(1, Math.round(scale))
+  const tile = document.createElement('canvas')
+  tile.width = 1
+  tile.height = line * 2
+  const t = tile.getContext('2d')
+  if (!t) return null
+  t.clearRect(0, 0, 1, tile.height)
+  t.fillStyle = 'rgba(0,0,0,0.18)'
+  t.fillRect(0, line, 1, line)
+  return ctx.createPattern(tile, 'repeat')
 }
 
 export function present(view: View, scanlines = true): void {
@@ -58,9 +73,8 @@ export function present(view: View, scanlines = true): void {
   ctx.fillRect(0, 0, cssW, cssH)
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(buffer, 0, 0, LOGICAL_W, LOGICAL_H, ox, oy, LOGICAL_W * scale, LOGICAL_H * scale)
-  if (scanlines) {
-    ctx.fillStyle = 'rgba(0,0,0,0.18)'
-    const h = LOGICAL_H * scale
-    for (let y = 0; y < h; y += 2) ctx.fillRect(ox, oy + y, LOGICAL_W * scale, 1)
+  if (scanlines && view.scan) {
+    ctx.fillStyle = view.scan
+    ctx.fillRect(ox, oy, LOGICAL_W * scale, LOGICAL_H * scale)
   }
 }

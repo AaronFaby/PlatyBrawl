@@ -3,14 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PLATY BRAWL</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   </head>
   <body>
     <canvas id="game"></canvas>
+    <div id="touch" hidden>
+      <div class="touch-pad">
+        <button type="button" class="touch-btn" data-touch="up">↑</button>
+        <button type="button" class="touch-btn" data-touch="left">←</button>
+        <button type="button" class="touch-btn" data-touch="down">↓</button>
+        <button type="button" class="touch-btn" data-touch="right">→</button>
+      </div>
+      <div class="touch-faces">
+        <button type="button" class="touch-btn" data-touch="lp">LP</button>
+        <button type="button" class="touch-btn" data-touch="hp">HP</button>
+        <button type="button" class="touch-btn" data-touch="lk">LK</button>
+        <button type="button" class="touch-btn" data-touch="hk">HK</button>
+        <button type="button" class="touch-btn touch-start" data-touch="start">START</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

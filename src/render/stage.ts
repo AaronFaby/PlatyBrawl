@@ -1,5 +1,5 @@
-import { GROUND_Y, LOGICAL_H, LOGICAL_W, STAGE_W } from '../config.ts'
-import type { StageId } from '../data/stages.ts'
+import { FONT, GROUND_Y, LOGICAL_H, LOGICAL_W, STAGE_W } from '../config.ts'
+import { STAGE_META, type StageId } from '../data/stages.ts'
 import type { Cam } from './camera.ts'
 import { bank } from './sprite.ts'
 
@@ -13,7 +13,7 @@ const GROUND: Record<StageId, { lip: string; mid: string; deep: string; wash: st
 }
 
 export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number, stageId: StageId = 'billabong'): void {
-  const img = bank.stages[stageId] ?? bank.stages.billabong
+  const img = bank.stages[stageId]
   if (img) {
     const srcW = img.width
     const srcH = img.height
@@ -106,8 +106,8 @@ export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number, st
   ctx.fillStyle = '#220814'
   ctx.fillRect(-6, -18, 70, 22)
   ctx.fillStyle = '#ff3d7f'
-  ctx.font = '8px "Press Start 2P"'
-  ctx.fillText('BILLABONG', 0, 0)
+  ctx.font = `8px ${FONT}`
+  ctx.fillText(STAGE_META[stageId].name, 0, 0)
   ctx.restore()
 
   // side walls hint

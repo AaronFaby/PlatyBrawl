@@ -27,7 +27,6 @@ export function titleScene(game: Game): Scene {
       }
     },
     draw(ctx) {
-      const t = game.tick
       const bg = ctx.createLinearGradient(0, 0, 0, LOGICAL_H)
       bg.addColorStop(0, '#12061c')
       bg.addColorStop(0.55, '#2a0a28')
@@ -90,7 +89,6 @@ export function titleScene(game: Game): Scene {
       ctx.fillStyle = '#6a5068'
       ctx.fillText(`v${VERSION}`, LOGICAL_W - 8, 14)
       ctx.restore()
-      void t
     },
   }
 }

@@ -256,7 +256,7 @@ export const soldier: CharDef = {
     },
   },
   specials: [
-    { motion: 'qcf', button: 'p', light: 'pistolShotL', heavy: 'pistolShotH' },
-    { motion: 'qcf', button: 'k', light: 'combatRushL', heavy: 'combatRushH' },
+    { motion: 'qcf', button: 'p', light: 'pistolShotL', heavy: 'pistolShotH', pose: 'special1' },
+    { motion: 'qcf', button: 'k', light: 'combatRushL', heavy: 'combatRushH', pose: 'special2' },
   ],
 }

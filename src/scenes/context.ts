@@ -1,5 +1,5 @@
 import type { CpuBrain } from '../ai/cpu.ts'
-import type { CharId } from '../config.ts'
+import { CHAR_IDS } from '../config.ts'
 import type { FightWorld } from '../fight/match.ts'
 import type { Session } from '../fight/types.ts'
 import type { DeviceState } from '../input/devices.ts'
@@ -32,4 +32,4 @@ export type Game = {
 
 export const DEFAULT_SESSION: Session = { p1: 'bob', p2: 'ninja', p2Cpu: true, cpuDifficulty: 'normal' }
 
-export const ROSTER_ORDER: CharId[] = ['bob', 'ninja', 'cyber', 'soldier', 'chainsaw', 'toxic']
+export const ROSTER_ORDER = CHAR_IDS

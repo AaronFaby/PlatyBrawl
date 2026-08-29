@@ -252,7 +252,7 @@ export const toxic: CharDef = {
     },
   },
   specials: [
-    { motion: 'qcf', button: 'p', light: 'gasBombL', heavy: 'gasBombH' },
-    { motion: 'qcb', button: 'k', light: 'meltDownL', heavy: 'meltDownH' },
+    { motion: 'qcf', button: 'p', light: 'gasBombL', heavy: 'gasBombH', pose: 'special1' },
+    { motion: 'qcb', button: 'k', light: 'meltDownL', heavy: 'meltDownH', pose: 'special2' },
   ],
 }
