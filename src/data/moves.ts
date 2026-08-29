@@ -6,6 +6,7 @@ export const SPECIAL_LINES: Record<CharId, string[]> = {
   cyber: ['PLASMA  CHARGE B+F+P', 'ROCKET KNEE  QCF+K'],
   soldier: ['SERVICE PISTOL  QCF+P', 'COMBAT RUSH  QCF+K'],
   chainsaw: ['CHAIN HOOK  QCF+P', 'SAW SLASH  QCF+K'],
+  toxic: ['GAS BOMB  QCF+P', 'MELTDOWN  QCB+K'],
 }
 
 export const MOVESET: Record<CharId, string[]> = {
@@ -42,6 +43,13 @@ export const MOVESET: Record<CharId, string[]> = {
     'PUNCH / KICK   CROUCH+BTN LOWS',
     'CHAIN HOOK  ↓↘→ + P',
     'SAW SLASH   ↓↘→ + K',
+    'THROW       LP+LK',
+  ],
+  toxic: [
+    'MOVE / CROUCH / JUMP',
+    'PUNCH / KICK   CROUCH+BTN LOWS',
+    'GAS BOMB    ↓↘→ + P',
+    'MELTDOWN    ↓↙← + K',
     'THROW       LP+LK',
   ],
 }

@@ -29,4 +29,13 @@ describe('pickCpuOpponent', () => {
     expect(saw.moves.standLP).toBeTruthy()
     expect(saw.moves.standHK).toBeTruthy()
   })
+
+  it('lists toxic with a gas bomb and meltdown', () => {
+    expect(CHAR_IDS).toContain('toxic')
+    const tox = getChar('toxic')
+    expect(tox.specials.some((s) => s.light === 'gasBombL')).toBe(true)
+    expect(tox.specials.some((s) => s.light === 'meltDownL')).toBe(true)
+    expect(tox.moves.standLP).toBeTruthy()
+    expect(tox.moves.standHK).toBeTruthy()
+  })
 })

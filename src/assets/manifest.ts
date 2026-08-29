@@ -32,7 +32,8 @@ export function poseForAnim(anim: string, cell: number): Pose {
     anim.startsWith('shuriken') ||
     anim.startsWith('plasma') ||
     anim.startsWith('pistol') ||
-    anim.startsWith('chainHook')
+    anim.startsWith('chainHook') ||
+    anim.startsWith('gasBomb')
   )
     return 'special1'
   if (
@@ -40,7 +41,8 @@ export function poseForAnim(anim: string, cell: number): Pose {
     anim.startsWith('shadow') ||
     anim.startsWith('rocket') ||
     anim.startsWith('combatRush') ||
-    anim.startsWith('sawSlash')
+    anim.startsWith('sawSlash') ||
+    anim.startsWith('meltDown')
   )
     return 'special2'
   if (anim.includes('LK') || anim.includes('HK') || anim === 'standLK' || anim === 'standHK') return 'kick'

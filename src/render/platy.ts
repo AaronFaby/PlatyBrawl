@@ -99,6 +99,13 @@ function poseFrom(f: Fighter, cell: number): Pose {
     p.lean = cell >= 1 ? 0.75 : 0.15
     p.arm = cell >= 1 ? 0.8 : -0.2
   }
+  if (f.moveId?.startsWith('gasBomb')) {
+    p.arm = cell >= 1 ? 1.2 : -0.4
+  }
+  if (f.moveId?.startsWith('meltDown')) {
+    p.arm = 0.8
+    p.lean = 0.15
+  }
   if (f.charId === 'ninja') p.sword = p.arm > 0.5 ? 1.1 : 0.4
   return p
 }
@@ -149,6 +156,17 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   if (id === 'cyber') drawCyber(ctx, bodyY)
   if (id === 'soldier') drawSoldier(ctx, bodyY)
   if (id === 'chainsaw') drawChainsaw(ctx, bodyY)
+  if (id === 'toxic') drawHazmat(ctx, bodyY)
+
+  if (f.radHits > 0) {
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.fillStyle = 'rgba(220,255,40,0.45)'
+    ctx.beginPath()
+    ctx.ellipse(0, bodyY - 6, 22, 28, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
 
   // arm
   ctx.fillStyle = id === 'cyber' ? '#8aa0b0' : bodyColor(id)
@@ -174,8 +192,10 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
     ctx.fill()
   }
 
+  if (id === 'toxic') drawMask(ctx, bodyY, bodyH)
+
   // eye
-  ctx.fillStyle = id === 'cyber' ? '#39f6ff' : '#1a1010'
+  ctx.fillStyle = id === 'cyber' ? '#39f6ff' : id === 'toxic' ? '#7dff4a' : '#1a1010'
   ctx.beginPath()
   ctx.arc(9, bodyY - bodyH * 0.6, id === 'cyber' ? 2.4 : 1.6, 0, Math.PI * 2)
   ctx.fill()
@@ -276,6 +296,23 @@ function drawSawBill(ctx: CanvasRenderingContext2D, x: number, y: number, extra:
   }
 }
 
+function drawHazmat(ctx: CanvasRenderingContext2D, bodyY: number): void {
+  ctx.fillStyle = '#1a1810'
+  ctx.fillRect(-6, bodyY - 6, 14, 3)
+  ctx.fillRect(2, bodyY - 8, 3, 16)
+}
+
+function drawMask(ctx: CanvasRenderingContext2D, bodyY: number, bodyH: number): void {
+  ctx.fillStyle = '#2a2a30'
+  ctx.beginPath()
+  ctx.ellipse(8, bodyY - bodyH * 0.58, 9, 7, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#1a2418'
+  ctx.beginPath()
+  ctx.ellipse(10, bodyY - bodyH * 0.6, 4, 3.5, 0, 0, Math.PI * 2)
+  ctx.fill()
+}
+
 function drawSoldier(ctx: CanvasRenderingContext2D, bodyY: number): void {
   ctx.fillStyle = '#4a5c32'
   ctx.beginPath()
@@ -292,12 +329,14 @@ function bodyColor(id: CharId): string {
   if (id === 'cyber') return '#e6d2a8'
   if (id === 'soldier') return '#c8b080'
   if (id === 'chainsaw') return '#8a8a92'
+  if (id === 'toxic') return '#d8c43a'
   return '#f0d8a8'
 }
 
 function billColor(id: CharId): string {
   if (id === 'cyber') return '#5a6570'
   if (id === 'chainsaw') return '#c8c8d0'
+  if (id === 'toxic') return '#3a3a40'
   return '#1a1210'
 }
 
@@ -306,6 +345,7 @@ function tailColor(id: CharId): string {
   if (id === 'ninja') return '#4a2a18'
   if (id === 'soldier') return '#3a2a18'
   if (id === 'chainsaw') return '#4a4a50'
+  if (id === 'toxic') return '#c8b030'
   return '#1a1210'
 }
 
@@ -314,5 +354,6 @@ function footColor(id: CharId): string {
   if (id === 'ninja') return '#1a1010'
   if (id === 'soldier') return '#2a2418'
   if (id === 'chainsaw') return '#3a3a40'
+  if (id === 'toxic') return '#2a2a28'
   return '#1a1210'
 }

@@ -1,6 +1,6 @@
 # Platy Brawl
 
-A 90s arcade-style 2D fighting game. Five platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → stage/music → VS → fight → rematch.
+A 90s arcade-style 2D fighting game. Six platypuses, motion specials, first-to-two rounds, local two-player or versus CPU. The cabinet flow is title → select → stage/music → VS → fight → rematch.
 
 Play it: [brawl.bobtheplaty.com](https://brawl.bobtheplaty.com)
 
@@ -43,6 +43,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 | **Cyberplaty** | Zoner | **Plasma** hold `←` then `→ + P` · **Rocket Knee** `↓ ↘ → + K` |
 | **Soldier Platy** | Gunner | **Service Pistol** `↓ ↘ → + P` · **Combat Rush** `↓ ↘ → + K` |
 | **Chainsaw Platy** | Grappler | **Chain Hook** `↓ ↘ → + P` · **Saw Slash** `↓ ↘ → + K` |
+| **Toxic Platy** | Hazmat | **Gas Bomb** `↓ ↘ → + P` · **Meltdown** `↓ ↙ ← + K` |
 
 Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button.
 
@@ -64,6 +65,7 @@ After character select you pick a stage and a theme song. **Random** is the defa
 | **Neon Lab** | Cyber |
 | **Army Base** | Soldier |
 | **Tool Shed** | Chainsaw |
+| **Sludge Pit** | Toxic |
 
 Each fighter has their own 90s chip theme. You can pick any theme, or Random. The bottom-right corner shows **MUSIC: ON** or **MUSIC: OFF**. Press **M** to toggle (the browser remembers it).
 
@@ -147,7 +149,7 @@ src/
   scenes/            title, select, arena, versus, fight, result
   fight/             fighters, combat, physics, projectiles, match
   input/             keyboard + pads, motion buffer
-  data/characters/   Bob, Ninja, Cyber, Soldier, Chainsaw frame data
+  data/characters/   Bob, Ninja, Cyber, Soldier, Chainsaw, Toxic frame data
   data/moves.ts      overlay / select move lists
   data/stages.ts     stage roster, home stages, random pick
   data/themes.ts     fight theme ids and names

@@ -67,6 +67,15 @@ export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam
   ctx.translate(Math.round(x), Math.round(y))
   ctx.scale(f.facing * SPRITE_SCALE, SPRITE_SCALE)
   if (f.status === 'knockdown' || (f.status === 'ko' && f.y >= 229)) ctx.rotate(-1.2)
+  if (f.radHits > 0) {
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.fillStyle = 'rgba(220,255,40,0.4)'
+    ctx.beginPath()
+    ctx.ellipse(0, -48, 36, 52, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
   if (f.flash > 0 && f.flash % 2 === 0) ctx.globalAlpha = 0.4
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(img, -SPRITE_ORIGIN_X, -SPRITE_ORIGIN_Y)

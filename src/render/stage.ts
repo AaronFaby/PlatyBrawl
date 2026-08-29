@@ -9,6 +9,7 @@ const GROUND: Record<StageId, { lip: string; mid: string; deep: string; wash: st
   neonlab: { lip: '#3ad8e8', mid: '#1a2438', deep: '#0a101c', wash: 'rgba(8,4,24,0.16)' },
   armybase: { lip: '#6a6a38', mid: '#4a4a28', deep: '#2a2414', wash: 'rgba(20,18,8,0.12)' },
   toolshed: { lip: '#8a5a30', mid: '#4a3018', deep: '#24140c', wash: 'rgba(20,10,4,0.14)' },
+  sludgepit: { lip: '#c8c04a', mid: '#3a4820', deep: '#14180c', wash: 'rgba(24,28,8,0.16)' },
 }
 
 export function drawStage(ctx: CanvasRenderingContext2D, cam: Cam, t: number, stageId: StageId = 'billabong'): void {

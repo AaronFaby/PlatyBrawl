@@ -13,7 +13,7 @@ describe('pickStage', () => {
   })
 
   it('lists a home stage for every fighter', () => {
-    expect(STAGE_IDS).toEqual(['billabong', 'dojo', 'neonlab', 'armybase', 'toolshed'])
+    expect(STAGE_IDS).toEqual(['billabong', 'dojo', 'neonlab', 'armybase', 'toolshed', 'sludgepit'])
     for (const id of CHAR_IDS) {
       expect(STAGE_IDS).toContain(CHAR_STAGE[id])
     }

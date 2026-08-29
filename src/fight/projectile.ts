@@ -42,6 +42,28 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
       facing,
     }
   }
+  if (kind === 'gas') {
+    return {
+      owner: owner.id,
+      kind,
+      x: owner.x + facing * 32,
+      y: owner.y - 40,
+      vx: facing * (heavy ? 3.2 : 2.2),
+      w: 12,
+      h: 12,
+      damage: heavy ? 50 : 35,
+      onHitStun: heavy ? 14 : 12,
+      onBlockStun: 8,
+      hitstop: 4,
+      height: 'high',
+      life: heavy ? 78 : 70,
+      hasHit: false,
+      facing,
+      poison: heavy
+        ? { damage: 8, interval: 60, duration: 720 }
+        : { damage: 5, interval: 60, duration: 480 },
+    }
+  }
   if (kind === 'shuriken') {
     return {
       owner: owner.id,

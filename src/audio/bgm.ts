@@ -15,15 +15,17 @@ const BPM: Record<Track, number> = {
   cyber: 130,
   soldier: 108,
   chainsaw: 172,
+  toxic: 136,
 }
 
-type Kit = 'arcade' | 'stealth' | 'techno' | 'march' | 'grind'
+type Kit = 'arcade' | 'stealth' | 'techno' | 'march' | 'grind' | 'hazard'
 
 function kitFor(track: Track): Kit {
   if (track === 'ninja') return 'stealth'
   if (track === 'cyber') return 'techno'
   if (track === 'soldier') return 'march'
   if (track === 'chainsaw') return 'grind'
+  if (track === 'toxic') return 'hazard'
   return 'arcade'
 }
 
@@ -97,6 +99,9 @@ function kick(t: number, kit: Kit): void {
   else if (kit === 'grind') {
     osc('sine', 180, t, 0.1, 0.5, 50)
     noiseBurst(t, 0.04, 0.12, 400)
+  } else if (kit === 'hazard') {
+    osc('sine', 70, t, 0.2, 0.48, 32)
+    noiseBurst(t, 0.05, 0.1, 280)
   } else if (kit === 'stealth') osc('sine', 90, t, 0.18, 0.32, 40)
   else osc('sine', 150, t, 0.16, 0.55, 42)
 }
@@ -113,6 +118,9 @@ function snare(t: number, kit: Kit): void {
   } else if (kit === 'grind') {
     noiseBurst(t, 0.07, 0.38, 900, 0.4)
     osc('square', 140, t, 0.05, 0.1, 70)
+  } else if (kit === 'hazard') {
+    noiseBurst(t, 0.09, 0.28, 1600, 0.6)
+    osc('triangle', 210, t, 0.07, 0.1, 80)
   } else {
     noiseBurst(t, 0.11, 0.28, 1800, 0.7)
     osc('triangle', 190, t, 0.08, 0.12, 90)
@@ -136,6 +144,10 @@ function hat(t: number, open: boolean, kit: Kit): void {
     noiseBurst(t, 0.025, 0.05, 700, 0.3)
     return
   }
+  if (kit === 'hazard') {
+    noiseBurst(t, open ? 0.07 : 0.025, open ? 0.07 : 0.04, open ? 2400 : 4200, 0.5)
+    return
+  }
   const c = ac()
   const src = c.createBufferSource()
   src.buffer = noiseBuf()
@@ -157,10 +169,17 @@ function bass(t: number, note: number, beats: number, stepSec: number, kit: Kit)
   const o = c.createOscillator()
   const g = c.createGain()
   const f = c.createBiquadFilter()
-  o.type = kit === 'techno' || kit === 'grind' ? 'sawtooth' : kit === 'stealth' ? 'sine' : kit === 'march' ? 'triangle' : 'square'
+  o.type =
+    kit === 'techno' || kit === 'grind' || kit === 'hazard'
+      ? 'sawtooth'
+      : kit === 'stealth'
+        ? 'sine'
+        : kit === 'march'
+          ? 'triangle'
+          : 'square'
   o.frequency.setValueAtTime(midi(note), t)
   f.type = 'lowpass'
-  const startF = kit === 'techno' ? 900 : kit === 'grind' ? 700 : kit === 'stealth' ? 280 : 420
+  const startF = kit === 'techno' ? 900 : kit === 'grind' ? 700 : kit === 'hazard' ? 1100 : kit === 'stealth' ? 280 : 420
   const endF = kit === 'techno' ? 220 : 160
   f.frequency.setValueAtTime(startF, t)
   f.frequency.exponentialRampToValueAtTime(endF, t + dur)
@@ -185,10 +204,16 @@ function lead(t: number, note: number, beats: number, stepSec: number, kit: Kit)
   const dur = Math.max(0.04, beats * stepSec * (kit === 'techno' ? 0.55 : kit === 'grind' ? 0.5 : 0.85))
   const o = c.createOscillator()
   const g = c.createGain()
-  o.type = kit === 'stealth' ? 'triangle' : kit === 'techno' || kit === 'grind' ? 'sawtooth' : 'square'
+  o.type = kit === 'stealth' ? 'triangle' : kit === 'techno' || kit === 'grind' || kit === 'hazard' ? 'sawtooth' : 'square'
   o.frequency.setValueAtTime(midi(note), t)
   if (kit === 'grind') o.frequency.exponentialRampToValueAtTime(midi(note + 1), t + dur)
-  env(g, t, kit === 'stealth' ? 0.13 : kit === 'march' ? 0.14 : 0.11, kit === 'stealth' ? 0.002 : 0.008, dur)
+  env(
+    g,
+    t,
+    kit === 'stealth' ? 0.13 : kit === 'march' ? 0.14 : kit === 'hazard' ? 0.12 : 0.11,
+    kit === 'stealth' ? 0.002 : 0.008,
+    dur,
+  )
   o.connect(g)
   g.connect(dest())
   if (kit === 'march') {
@@ -231,6 +256,11 @@ function stab(t: number, note: number, stepSec: number, kit: Kit): void {
   if (kit === 'grind') {
     noiseBurst(t, 0.14, 0.22, 500, 0.3)
     osc('sawtooth', midi(note), t, 0.16, 0.1, midi(note + 7))
+    return
+  }
+  if (kit === 'hazard') {
+    noiseBurst(t, 0.1, 0.14, 700, 0.4)
+    osc('square', midi(note), t, 0.14, 0.1, midi(note - 5))
     return
   }
   const offs = kit === 'march' ? [0, 4, 7] : [0, 3, 7]
@@ -425,11 +455,35 @@ function patternSaw(): { steps: number; hits: Hit[] } {
   return { steps, hits }
 }
 
+function patternToxic(): { steps: number; hits: Hit[] } {
+  const hits: Hit[] = []
+  const steps = 128
+  for (let b = 0; b < 8; b++) {
+    const o = b * 16
+    hits.push({ s: o, v: 'kick' })
+    hits.push({ s: o + 6, v: 'kick' })
+    hits.push({ s: o + 8, v: 'snare' })
+    hits.push({ s: o + 14, v: 'snare' })
+    for (const i of [2, 4, 10, 12]) hits.push({ s: o + i, v: 'hat', n: i === 12 ? 1 : 0 })
+    if (b % 2 === 1) hits.push({ s: o + 10, v: 'stab', n: 41 })
+  }
+  pushBass(hits, [33, 33, 36, 33, 31, 33, 36, 28], 8, 6)
+  pushHook(hits, [
+    [57, 2], [60, 1], [57, 1], [0, 2], [64, 2], [60, 4], [0, 2], [57, 2], [53, 6], [0, 4],
+  ], 0)
+  pushHook(hits, [
+    [60, 1], [64, 1], [67, 2], [64, 2], [0, 2], [60, 4], [57, 2], [53, 2], [52, 6], [0, 4],
+    [48, 4], [52, 4],
+  ], 64)
+  return { steps, hits }
+}
+
 function pattern(track: Track): { steps: number; hits: Hit[] } {
   if (track === 'ninja') return patternNinja()
   if (track === 'cyber') return patternCyber()
   if (track === 'soldier') return patternSoldier()
   if (track === 'chainsaw') return patternSaw()
+  if (track === 'toxic') return patternToxic()
   return patternArcade(track)
 }
 

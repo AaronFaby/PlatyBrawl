@@ -162,7 +162,7 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
       return stand()
     }
     if (hard) {
-      if (I === 'ninja' || I === 'soldier' || I === 'chainsaw') {
+      if (I === 'ninja' || I === 'soldier' || I === 'chainsaw' || I === 'toxic') {
         pushMotion(cpu.plan, [2, 3, 6], rand() < 0.5 ? 'hp' : 'lp', me.facing)
       } else {
         cpu.plan.push({ ticks: 10, dir: 8 })
@@ -184,6 +184,7 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
     if (I === 'ninja' && r < 0.4 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.15 * sp ? 'hp' : 'lp', me.facing)
     else if (I === 'soldier' && r < 0.45 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.18 * sp ? 'hp' : 'lp', me.facing)
     else if (I === 'chainsaw' && r < 0.42 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.16 * sp ? 'hp' : 'lp', me.facing)
+    else if (I === 'toxic' && r < 0.42 * sp) pushMotion(cpu.plan, [2, 3, 6], r < 0.16 * sp ? 'hp' : 'lp', me.facing)
     else if (I === 'bob' && r < 0.2 * sp) {
       pushMotion(cpu.plan, [2, 3, 6], 'lp', me.facing)
     } else if (r < (hard ? 0.9 : 0.75)) {
@@ -194,7 +195,7 @@ export function tickCpu(cpu: CpuBrain, me: Fighter, other: Fighter): VirtualInpu
 
   if (dist > 72) {
     const r = rand()
-    if (r < 0.18 * sp && I === 'ninja') pushMotion(cpu.plan, [2, 1, 4], rand() < 0.5 ? 'hk' : 'lk', me.facing)
+    if (r < 0.18 * sp && (I === 'ninja' || I === 'toxic')) pushMotion(cpu.plan, [2, 1, 4], rand() < 0.5 ? 'hk' : 'lk', me.facing)
     else if (r < (hard ? 0.32 : 0.4)) cpu.plan.push({ ticks: 2, dir: 5, lp: r < 0.28, lk: r >= 0.28 })
     else if (r < (hard ? 0.48 : 0.5)) {
       cpu.plan.push({ ticks: 12, dir: 8 })

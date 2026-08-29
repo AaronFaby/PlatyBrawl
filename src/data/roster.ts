@@ -5,8 +5,9 @@ import { chainsaw } from './characters/chainsaw.ts'
 import { cyber } from './characters/cyber.ts'
 import { ninja } from './characters/ninja.ts'
 import { soldier } from './characters/soldier.ts'
+import { toxic } from './characters/toxic.ts'
 
-const roster: Record<CharId, CharDef> = { bob, ninja, cyber, soldier, chainsaw }
+const roster: Record<CharId, CharDef> = { bob, ninja, cyber, soldier, chainsaw, toxic }
 
 export function getChar(id: CharId): CharDef {
   return roster[id]
@@ -18,4 +19,4 @@ export function pickCpuOpponent(p1: CharId, rng: () => number = Math.random): Ch
   return others[Math.floor(rng() * others.length)] ?? others[0]
 }
 
-export { bob, ninja, cyber, soldier, chainsaw }
+export { bob, ninja, cyber, soldier, chainsaw, toxic }
