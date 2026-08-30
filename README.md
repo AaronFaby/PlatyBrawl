@@ -45,7 +45,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 | **Chainsaw Platy** | Grappler | **Chain Hook** `↓ ↘ → + P` · **Saw Slash** `↓ ↘ → + K` |
 | **Toxic Platy** | Hazmat | **Gas Bomb** `↓ ↘ → + P` · **Meltdown** `↓ ↙ ← + K` |
 
-Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button.
+Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button. Hits can flash arcade callouts — **FIRST STRIKE!**, **COUNTER!**, **REVERSAL!**, **EXCELLENT**, **PERFECT**, **DOUBLE K.O.** — and an announcer says the line at the same time.
 
 Motions are relative to the way you face (numpad notation):
 

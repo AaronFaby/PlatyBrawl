@@ -1,4 +1,5 @@
 import { GROUND_Y, MAX_HP, ROUND_SECONDS, WINS_NEEDED } from '../config.ts'
+import { flushLandedHits, noteDoubleKo, notePerfect, resetCallouts, tickCallouts } from './callout.ts'
 import { stageForSession } from '../data/stages.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 import { clashProjectiles, spawnFrom, tickProjectiles } from './projectile.ts'
@@ -45,6 +46,9 @@ function freshMatch(session: Session): MatchState {
     shake: 0,
     sparks: [],
     projectiles: [],
+    callouts: [],
+    firstStrike: false,
+    streak: [0, 0],
     announce: 'ROUND 1',
     winner: null,
     timeout: false,
@@ -64,6 +68,7 @@ function startRound(world: FightWorld, round: number): void {
   world.match.shake = 0
   world.match.sparks = []
   world.match.projectiles = []
+  resetCallouts(world.match)
   world.match.announce = `ROUND ${round}`
   world.match.timeout = false
   world.match.winner = null
@@ -81,6 +86,7 @@ export function tickMatch(
   if (match.shake > 0) match.shake -= 0.35
   for (const s of match.sparks) s.life -= 1
   match.sparks = match.sparks.filter((s) => s.life > 0)
+  tickCallouts(match)
 
   if (dummyBlock) inputs[1] = dummyBlockInput(fighters[1], fighters[0])
 
@@ -118,8 +124,10 @@ export function tickMatch(
       match.announce = 'K.O.'
       if (ko0 && ko1) {
         match.winner = null
+        noteDoubleKo(match)
       } else {
         match.winner = ko0 ? 1 : 0
+        if (fighters[match.winner].hp >= MAX_HP) notePerfect(match)
       }
     } else if (match.timer <= 0) {
       match.phase = 'timeout'
@@ -172,6 +180,7 @@ export function tickMatch(
   if (match.phase === 'fight') {
     resolveStrikes(fighters[0], fighters[1], inputs[0], inputs[1], match)
     resolveProjectiles(fighters, inputs, match.projectiles, match)
+    flushLandedHits(match)
     tickPoison(fighters[0], fighters[1], match)
     tickPoison(fighters[1], fighters[0], match)
   }

@@ -3,6 +3,7 @@ import type { Fighter, Projectile, ProjectileKind } from './types.ts'
 
 export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean): Projectile {
   const facing = owner.facing
+  const reversal = owner.reversal
   if (kind === 'chain') {
     return {
       owner: owner.id,
@@ -20,6 +21,7 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
       life: heavy ? 88 : 78,
       hasHit: false,
       facing,
+      reversal,
       pull: 1,
     }
   }
@@ -40,6 +42,7 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
       life: heavy ? 70 : 80,
       hasHit: false,
       facing,
+      reversal,
     }
   }
   if (kind === 'gas') {
@@ -59,6 +62,7 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
       life: heavy ? 78 : 70,
       hasHit: false,
       facing,
+      reversal,
       poison: heavy
         ? { damage: 8, interval: 60, duration: 720 }
         : { damage: 5, interval: 60, duration: 480 },
@@ -81,6 +85,7 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
       life: 90,
       hasHit: false,
       facing,
+      reversal,
     }
   }
   return {
@@ -99,6 +104,7 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
     life: heavy ? 10 : 8,
     hasHit: false,
     facing,
+    reversal,
   }
 }
 

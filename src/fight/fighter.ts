@@ -9,6 +9,7 @@ import {
   THROW_RANGE,
   WAKEUP_INVULN,
 } from '../config.ts'
+import { REVERSAL_WINDOW, queueLandedHit } from './callout.ts'
 import { getChar } from '../data/roster.ts'
 import { createBuffer, matchMotion, pushDir, resetBuffer } from '../input/buffer.ts'
 import type { VirtualInput } from '../input/virtual.ts'
@@ -69,6 +70,8 @@ export function createFighter(id: PlayerId, charId: CharId, x: number, facing: F
     radHits: 0,
     lpTap: -99,
     lkTap: -99,
+    reversal: false,
+    reversalLeft: 0,
   }
 }
 
@@ -102,6 +105,8 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.radHits = 0
   f.lpTap = -99
   f.lkTap = -99
+  f.reversal = false
+  f.reversalLeft = 0
   resetBuffer(f.buffer)
 }
 
@@ -146,6 +151,7 @@ function setAnim(f: Fighter, name: string, status: FighterStatus): void {
 export function startMove(f: Fighter, moveId: string): void {
   const move = f.def.moves[moveId]
   if (!move) return
+  f.reversal = f.reversalLeft > 0 || f.status === 'wakeup' || f.status === 'land'
   f.moveId = moveId
   f.hasHit = false
   f.canCancel = false
@@ -169,6 +175,7 @@ function onAnimEnd(f: Fighter): void {
     return
   }
   if (f.status === 'wakeup' || f.status === 'land' || f.status === 'throw' || f.status === 'thrown') {
+    if (f.status === 'wakeup' || f.status === 'land') f.reversalLeft = REVERSAL_WINDOW
     setAnim(f, 'idle', 'idle')
     f.moveId = null
     return
@@ -261,7 +268,7 @@ function canThrowNow(f: Fighter): boolean {
   return id === 'standLP' || id === 'standLK' || id === 'crouchLP' || id === 'jumpLP'
 }
 
-function tryThrow(f: Fighter, other: Fighter): boolean {
+function tryThrow(f: Fighter, other: Fighter, match: MatchState): boolean {
   if (!grounded(f) || !grounded(other)) return false
   if (Math.abs(other.x - f.x) > THROW_RANGE) return false
   if (other.status === 'knockdown' || other.status === 'wakeup' || other.status === 'ko' || other.status === 'thrown') {
@@ -269,6 +276,7 @@ function tryThrow(f: Fighter, other: Fighter): boolean {
   }
   startMove(f, 'throw')
   f.vx = 0
+  queueLandedHit(match, f, other)
   other.status = 'thrown'
   other.anim = 'thrown'
   other.frameIndex = 0
@@ -502,7 +510,7 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
   } else if (canAct && !locked && trySpecial(f, input, hooks)) {
     // motion specials beat throw
   } else if (!locked && grab) {
-    if (!tryThrow(f, hooks.other) && actionable(f)) locomotion(f, input, locked)
+    if (!tryThrow(f, hooks.other, hooks.match) && actionable(f)) locomotion(f, input, locked)
   } else if (canAct && !locked && f.status !== 'hurt' && f.status !== 'block' && f.status !== 'knockdown' && f.status !== 'wakeup' && f.status !== 'land' && f.status !== 'thrown') {
     if (tryNormals(f, input)) {
       // normal
@@ -512,6 +520,8 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
   } else if (f.status === 'land') {
     f.vx = 0
   }
+
+  if (f.reversalLeft > 0) f.reversalLeft -= 1
 
   handleTeleport(f, hooks.other)
   handleProjectileSpawn(f, hooks)

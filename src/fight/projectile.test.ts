@@ -27,6 +27,17 @@ describe('spawnFrom', () => {
     expect(q.poison?.duration).toBeGreaterThan(p.poison!.duration)
   })
 
+  it('stamps the owner reversal flag at spawn', () => {
+    const idle = createFighter(0, 'ninja', 220, 1)
+    expect(spawnFrom(idle, 'shuriken', false).reversal).toBe(false)
+    idle.reversal = true
+    const star = spawnFrom(idle, 'shuriken', false)
+    expect(star.reversal).toBe(true)
+    idle.reversal = false
+    expect(star.reversal).toBe(true)
+    expect(spawnFrom(idle, 'shuriken', false).reversal).toBe(false)
+  })
+
   it('puts a chainsaw hook at the saw bill, not the torso', () => {
     const f = createFighter(0, 'chainsaw', 220, 1)
     const p = spawnFrom(f, 'chain', false)

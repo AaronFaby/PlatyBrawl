@@ -1,4 +1,5 @@
 import { REEL_SPEED, REEL_STOP } from '../config.ts'
+import { queueLandedHit } from './callout.ts'
 import { faceRel, overlapCenter, overlaps, worldBox } from './boxes.ts'
 import { airborne, currentFrame, grounded } from './fighter.ts'
 import { projBox } from './projectile.ts'
@@ -64,6 +65,7 @@ export function tickPoison(f: Fighter, other: Fighter, match: MatchState): void 
   const away = Math.sign(f.x - other.x) || other.facing
   f.hp = Math.max(0, f.hp - f.poisonDmg)
   f.flash = 3
+  match.streak[f.id] = 0
   if (f.hp <= 0) {
     f.status = 'ko'
     f.anim = 'ko'
@@ -87,6 +89,7 @@ function applyHit(
   blocked: boolean,
   match: MatchState,
   contact: { x: number; y: number },
+  reversal = attacker.reversal,
 ): void {
   const stop = blocked ? Math.max(2, move.hitstop - 2) : move.hitstop
   attacker.hitstop = stop
@@ -127,6 +130,7 @@ function applyHit(
   victim.flash = 5
   victim.moveId = null
   victim.hasHit = false
+  queueLandedHit(match, attacker, victim, reversal)
   if (move.poison) applyPoison(victim, move.poison)
   if (victim.hp <= 0) {
     victim.status = 'ko'
@@ -230,7 +234,7 @@ export function resolveProjectiles(
       }
       const blocked = isBlocking(victim, victimIn, p.height)
       const attacker = fighters[p.owner]
-      applyHit(attacker, victim, move, blocked, match, overlapCenter(pb, hurt))
+      applyHit(attacker, victim, move, blocked, match, overlapCenter(pb, hurt), p.reversal)
       if (!blocked && p.pull && victim.status === 'hurt') {
         const toward = Math.sign(attacker.x - victim.x) || -attacker.facing
         const dist = Math.abs(victim.x - attacker.x)

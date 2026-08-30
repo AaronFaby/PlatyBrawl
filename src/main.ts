@@ -16,6 +16,7 @@ import { versusScene } from './scenes/versus.ts'
 import { fightScene } from './scenes/fight.ts'
 import { resultScene } from './scenes/result.ts'
 import { ac } from './audio/sfx.ts'
+import { unlockAnnounce } from './audio/announce.ts'
 import { ensureBgm } from './audio/bgm.ts'
 import { bank, loadSprites } from './render/sprite.ts'
 import { drawMusicStatus } from './render/hud.ts'
@@ -62,6 +63,7 @@ function switchTo(id: SceneId, data?: unknown): void {
 
 const bootAudio = () => {
   ac()
+  unlockAnnounce()
   ensureBgm('title')
 }
 window.addEventListener('pointerdown', bootAudio, { once: true })

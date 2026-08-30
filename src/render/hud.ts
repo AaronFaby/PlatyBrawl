@@ -52,6 +52,8 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
     ctx.restore()
   }
 
+  drawCallouts(ctx, match)
+
   ctx.font = `5px ${FONT}`
   ctx.fillStyle = '#6a5068'
   ctx.textAlign = 'left'
@@ -108,6 +110,32 @@ function drawStatusTags(
   ctx.textAlign = align
   ctx.fillStyle = f.poisonLeft > 0 && f.radHits > 0 ? '#c8ff6a' : f.poisonLeft > 0 ? '#7dff4a' : '#e8ff3a'
   ctx.fillText(bits.join('  '), x, y)
+  ctx.restore()
+}
+
+function drawCallouts(ctx: CanvasRenderingContext2D, match: FightWorld['match']): void {
+  if (match.callouts.length === 0) return
+  const baseY = match.announce ? 162 : 108
+  ctx.save()
+  ctx.textAlign = 'center'
+  match.callouts.forEach((c, i) => {
+    const age = c.max - c.life
+    const pop = age < 8 ? 1.22 - age * 0.027 : 1
+    const alpha = c.life < 18 ? c.life / 18 : 1
+    const y = baseY + i * 16 - Math.min(6, age * 0.12)
+    ctx.save()
+    ctx.translate(LOGICAL_W / 2, y)
+    ctx.scale(pop, pop)
+    ctx.globalAlpha = alpha
+    ctx.font = `12px ${FONT}`
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 4
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'
+    ctx.strokeText(c.text, 0, 0)
+    ctx.fillStyle = c.fill
+    ctx.fillText(c.text, 0, 0)
+    ctx.restore()
+  })
   ctx.restore()
 }
 

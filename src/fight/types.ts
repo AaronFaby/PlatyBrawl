@@ -131,6 +131,8 @@ export type Fighter = {
   radHits: number
   lpTap: number
   lkTap: number
+  reversal: boolean
+  reversalLeft: number
 }
 
 export type Projectile = {
@@ -149,12 +151,15 @@ export type Projectile = {
   life: number
   hasHit: boolean
   facing: Facing
+  reversal: boolean
   pull?: number
   tether?: PlayerId
   poison?: PoisonSpec
 }
 
 export type Spark = { x: number; y: number; life: number; max: number }
+
+export type Callout = { text: string; fill: string; life: number; max: number }
 
 export type MatchPhase = 'intro' | 'fight' | 'ko' | 'timeout' | 'over'
 
@@ -169,6 +174,9 @@ export type MatchState = {
   shake: number
   sparks: Spark[]
   projectiles: Projectile[]
+  callouts: Callout[]
+  firstStrike: boolean
+  streak: [number, number]
   announce: string
   winner: PlayerId | null
   timeout: boolean
