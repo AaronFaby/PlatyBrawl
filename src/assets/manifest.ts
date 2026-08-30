@@ -4,6 +4,17 @@ import { getChar } from '../data/roster.ts'
 export const SPRITE_ORIGIN_X = 80
 export const SPRITE_ORIGIN_Y = 156
 export const SPRITE_SCALE = 0.7
+/** Idle content height in sprite pixels, mapped to world size. */
+export const IDLE_DRAW_H = 72
+
+export function spriteDrawScale(idleH: number, poseH: number, crouch: boolean): number {
+  const ih = Math.max(1, idleH)
+  const ph = Math.max(1, poseH)
+  const base = IDLE_DRAW_H / ih
+  if (crouch) return Math.min(base, IDLE_DRAW_H / ph)
+  if (ph >= ih) return base
+  return IDLE_DRAW_H / ph
+}
 
 export const POSES = [
   'idle',

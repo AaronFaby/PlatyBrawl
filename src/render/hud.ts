@@ -1,6 +1,7 @@
 import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W, MAX_HP, WINS_NEEDED } from '../config.ts'
 import { isMuted } from '../audio/engine.ts'
 import { MOVESET } from '../data/moves.ts'
+import { chainHandWorld } from '../fight/projectile.ts'
 import type { FightWorld } from '../fight/match.ts'
 
 export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: number): void {
@@ -206,8 +207,9 @@ export function drawProjectiles(ctx: CanvasRenderingContext2D, world: FightWorld
       ctx.restore()
     } else if (p.kind === 'chain') {
       const owner = world.fighters[p.owner]
-      const ox = owner.x - camX + owner.facing * 22
-      const oy = owner.y - 46
+      const hand = chainHandWorld(owner)
+      const ox = hand.x - camX
+      const oy = hand.y
       const tx = p.x - camX
       const ty = p.y
       const dx = tx - ox

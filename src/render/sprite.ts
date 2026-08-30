@@ -4,17 +4,18 @@ import { STAGE_IDS, stageUrl, type StageId } from '../data/stages.ts'
 import { currentFrame, grounded } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
 import {
+  IDLE_DRAW_H,
   POSES,
   poseForAnim,
   SPRITE_ORIGIN_X,
   SPRITE_ORIGIN_Y,
+  spriteDrawScale,
   spriteUrl,
   type Pose,
 } from '../assets/manifest.ts'
 import type { Cam } from './camera.ts'
 
-/** Idle content height in sprite pixels, mapped to world size. */
-export const IDLE_DRAW_H = 72
+export { IDLE_DRAW_H, spriteDrawScale }
 
 export type SrcRect = { x: number; y: number; w: number; h: number }
 
@@ -56,15 +57,6 @@ export function opaqueRect(img: HTMLImageElement): SrcRect {
   }
   opaqueCache.set(img, rect)
   return rect
-}
-
-export function spriteDrawScale(idleH: number, poseH: number, crouch: boolean): number {
-  const ih = Math.max(1, idleH)
-  const ph = Math.max(1, poseH)
-  const base = IDLE_DRAW_H / ih
-  if (crouch) return Math.min(base, IDLE_DRAW_H / ph)
-  if (ph >= ih) return base
-  return IDLE_DRAW_H / ph
 }
 
 export type SpriteBank = {

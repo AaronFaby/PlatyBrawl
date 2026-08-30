@@ -1,15 +1,45 @@
+import { SPRITE_ORIGIN_X, SPRITE_ORIGIN_Y, spriteDrawScale } from '../assets/manifest.ts'
 import { STAGE_W } from '../config.ts'
 import type { Fighter, Projectile, ProjectileKind } from './types.ts'
+
+type Muzzle = { px: number; py: number; idleH: number; poseH: number }
+
+/** Firing-pose sprite pixel of the muzzle. Heights are packed opaque bounds. */
+const MUZZLE: Record<ProjectileKind, Muzzle> = {
+  bullet: { px: 155, py: 60, idleH: 150, poseH: 134 },
+  shuriken: { px: 150, py: 100, idleH: 108, poseH: 106 },
+  beam: { px: 106, py: 96, idleH: 137, poseH: 114 },
+  chain: { px: 153, py: 85, idleH: 120, poseH: 103 },
+  gas: { px: 150, py: 86, idleH: 148, poseH: 115 },
+}
+
+const CHAIN_HAND: Muzzle = { px: 122, py: 86, idleH: 120, poseH: 103 }
+
+export function muzzleWorld(
+  owner: { x: number; y: number; facing: 1 | -1 },
+  spec: Muzzle,
+): { x: number; y: number } {
+  const scale = spriteDrawScale(spec.idleH, spec.poseH, false)
+  return {
+    x: owner.x + owner.facing * (spec.px - SPRITE_ORIGIN_X) * scale,
+    y: owner.y + (spec.py - SPRITE_ORIGIN_Y) * scale,
+  }
+}
+
+export function chainHandWorld(owner: { x: number; y: number; facing: 1 | -1 }): { x: number; y: number } {
+  return muzzleWorld(owner, CHAIN_HAND)
+}
 
 export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean): Projectile {
   const facing = owner.facing
   const reversal = owner.reversal
+  const muzzle = muzzleWorld(owner, MUZZLE[kind])
   if (kind === 'chain') {
     return {
       owner: owner.id,
       kind,
-      x: owner.x + facing * 30,
-      y: owner.y - 46,
+      x: muzzle.x,
+      y: muzzle.y,
       vx: facing * (heavy ? 4.8 : 3.8),
       w: 14,
       h: 10,
@@ -29,8 +59,8 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
     return {
       owner: owner.id,
       kind,
-      x: owner.x + facing * 58,
-      y: owner.y - 67,
+      x: muzzle.x,
+      y: muzzle.y,
       vx: facing * (heavy ? 5.4 : 4.0),
       w: 12,
       h: 6,
@@ -49,8 +79,8 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
     return {
       owner: owner.id,
       kind,
-      x: owner.x + facing * 32,
-      y: owner.y - 40,
+      x: muzzle.x,
+      y: muzzle.y,
       vx: facing * (heavy ? 3.2 : 2.2),
       w: 12,
       h: 12,
@@ -72,8 +102,8 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
     return {
       owner: owner.id,
       kind,
-      x: owner.x + facing * 22,
-      y: owner.y - 38,
+      x: muzzle.x,
+      y: muzzle.y,
       vx: facing * (heavy ? 3.6 : 2.3),
       w: 10,
       h: 10,
@@ -91,8 +121,8 @@ export function spawnFrom(owner: Fighter, kind: ProjectileKind, heavy: boolean):
   return {
     owner: owner.id,
     kind,
-    x: owner.x + facing * 18,
-    y: owner.y - 42,
+    x: muzzle.x,
+    y: muzzle.y,
     vx: 0,
     w: heavy ? 220 : 180,
     h: heavy ? 16 : 10,
