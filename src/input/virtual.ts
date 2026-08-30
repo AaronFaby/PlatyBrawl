@@ -8,11 +8,13 @@ export type VirtualInput = {
   lk: boolean
   hk: boolean
   start: boolean
+  color: boolean
   lpPress: boolean
   hpPress: boolean
   lkPress: boolean
   hkPress: boolean
   startPress: boolean
+  colorPress: boolean
   punchPress: boolean
   kickPress: boolean
 }
@@ -25,11 +27,13 @@ export function emptyInput(): VirtualInput {
     lk: false,
     hk: false,
     start: false,
+    color: false,
     lpPress: false,
     hpPress: false,
     lkPress: false,
     hkPress: false,
     startPress: false,
+    colorPress: false,
     punchPress: false,
     kickPress: false,
   }
@@ -41,6 +45,7 @@ export function latchPresses(into: VirtualInput, sample: VirtualInput): void {
   into.lkPress ||= sample.lkPress
   into.hkPress ||= sample.hkPress
   into.startPress ||= sample.startPress
+  into.colorPress ||= sample.colorPress
   into.punchPress = into.lpPress || into.hpPress
   into.kickPress = into.lkPress || into.hkPress
 }
@@ -51,6 +56,7 @@ export function withLatchedPresses(sample: VirtualInput, latch: VirtualInput): V
   const lkPress = sample.lkPress || latch.lkPress
   const hkPress = sample.hkPress || latch.hkPress
   const startPress = sample.startPress || latch.startPress
+  const colorPress = sample.colorPress || latch.colorPress
   return {
     ...sample,
     lpPress,
@@ -58,6 +64,7 @@ export function withLatchedPresses(sample: VirtualInput, latch: VirtualInput): V
     lkPress,
     hkPress,
     startPress,
+    colorPress,
     punchPress: lpPress || hpPress,
     kickPress: lkPress || hkPress,
   }
@@ -72,6 +79,7 @@ export function stickToVirtual(stick: RawStick, prev: VirtualInput): VirtualInpu
   const lkPress = stick.lk && !prev.lk
   const hkPress = stick.hk && !prev.hk
   const startPress = stick.start && !prev.start
+  const colorPress = stick.color && !prev.color
   return {
     dir,
     lp: stick.lp,
@@ -79,11 +87,13 @@ export function stickToVirtual(stick: RawStick, prev: VirtualInput): VirtualInpu
     lk: stick.lk,
     hk: stick.hk,
     start: stick.start,
+    color: stick.color,
     lpPress,
     hpPress,
     lkPress,
     hkPress,
     startPress,
+    colorPress,
     punchPress: lpPress || hpPress,
     kickPress: lkPress || hkPress,
   }

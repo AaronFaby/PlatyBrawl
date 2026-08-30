@@ -4,6 +4,7 @@ import { ac, sfxLock, sfxSelect } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { SPECIAL_LINES } from '../data/moves.ts'
 import { pickCpuOpponent } from '../data/roster.ts'
+import { nextSkin, sessionSkin, shiftHex, type SkinId } from '../data/skins.ts'
 import { p2WantsJoin } from '../input/devices.ts'
 import { getPortrait } from '../render/sprite.ts'
 import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
@@ -19,6 +20,8 @@ export function selectScene(game: Game): Scene {
   let prevV = 5
   let hold1 = 0
   let hold2 = 0
+  let s1: SkinId = 0
+  let s2: SkinId = 0
 
   return {
     id: 'select',
@@ -30,6 +33,8 @@ export function selectScene(game: Game): Scene {
       lock1 = false
       lock2 = false
       p2Human = !game.session.p2Cpu
+      s1 = sessionSkin(game.session.p1Skin)
+      s2 = sessionSkin(game.session.p2Skin)
       prev1 = 5
       prev2 = 5
       prevV = 5
@@ -59,8 +64,10 @@ export function selectScene(game: Game): Scene {
         sfxSelect()
       }
       prevV = v1
-      if (!lock1 && p2WantsJoin(game.devices)) {
+      const p2WasHuman = p2Human
+      if (!p2Human && !lock1 && p2WantsJoin(game.devices)) {
         p2Human = true
+        sfxSelect()
       }
 
       if (p2Human && !lock2 && h2) {
@@ -72,6 +79,15 @@ export function selectScene(game: Game): Scene {
       } else hold2 = 0
       prev2 = p2Human && h2 ? d2 : 5
 
+      if (!lock1 && game.p1.colorPress) {
+        s1 = nextSkin(s1)
+        sfxSelect()
+      }
+      if (p2Human && !lock2 && game.p2.colorPress) {
+        s2 = nextSkin(s2)
+        sfxSelect()
+      }
+
       if (!lock1 && (game.p1.punchPress || game.p1.startPress || game.p1.kickPress)) {
         lock1 = true
         sfxLock()
@@ -81,15 +97,18 @@ export function selectScene(game: Game): Scene {
           lock2 = true
         }
       }
-      if (p2Human && !lock2 && (game.p2.punchPress || game.p2.kickPress)) {
+      if (p2WasHuman && !lock2 && (game.p2.punchPress || game.p2.kickPress)) {
         lock2 = true
         sfxLock()
       }
 
       if (lock1 && lock2) {
+        if (p2Human && ROSTER_ORDER[c1] === ROSTER_ORDER[c2] && s1 === s2) s2 = nextSkin(s2)
         game.session.p1 = ROSTER_ORDER[c1]
         game.session.p2 = ROSTER_ORDER[c2]
         game.session.p2Cpu = !p2Human
+        game.session.p1Skin = s1
+        game.session.p2Skin = s2
         game.switchTo('arena')
       }
     },
@@ -108,25 +127,29 @@ export function selectScene(game: Game): Scene {
       ROSTER_ORDER.forEach((id, i) => {
         const x = startX + i * (cardW + gap)
         const y = 70
+        const p1 = i === c1
+        const p2 = p2Human ? i === c2 : lock2 && i === c2
         drawCard(ctx, id, x, y, cardW, {
-          p1: i === c1,
-          p2: p2Human ? i === c2 : lock2 && i === c2,
+          p1,
+          p2,
           l1: lock1 && i === c1,
           l2: lock2 && i === c2,
           cpu: !p2Human && lock2 && i === c2,
+          skin: p1 ? s1 : p2 ? s2 : 0,
+          skin2: p1 && p2 ? s2 : undefined,
         })
       })
 
       ctx.font = `7px ${FONT}`
       ctx.fillStyle = '#ff8aa8'
-      ctx.fillText(lock1 ? 'P1 LOCKED' : 'P1  A/D  PICK YOU   U LOCK', LOGICAL_W / 2, 230)
+      ctx.fillText(lock1 ? 'P1 LOCKED' : 'P1  A/D PICK  Q COLOR  U LOCK', LOGICAL_W / 2, 230)
       const cpuHard = game.session.cpuDifficulty === 'hard'
       ctx.fillStyle = p2Human ? '#8ad4ff' : cpuHard ? '#ff8a4a' : '#8ad4ff'
       ctx.fillText(
         p2Human
           ? lock2
             ? 'P2 LOCKED'
-            : 'P2  ARROWS  PICK   O LOCK'
+            : 'P2  ARROWS PICK  / COLOR  O LOCK'
           : `CPU  ${cpuHard ? 'HARD' : 'NORMAL'}   W/S DIFF   O = HUMAN P2`,
         LOGICAL_W / 2,
         244,
@@ -145,9 +168,9 @@ function drawCard(
   x: number,
   y: number,
   w: number,
-  mark: { p1: boolean; p2: boolean; l1: boolean; l2: boolean; cpu: boolean },
+  mark: { p1: boolean; p2: boolean; l1: boolean; l2: boolean; cpu: boolean; skin: SkinId; skin2?: SkinId },
 ): void {
-  const { p1, p2, l1, l2, cpu } = mark
+  const { p1, p2, l1, l2, cpu, skin, skin2 } = mark
   const meta = CHAR_META[id]
   const h = w >= 96 ? 130 : 118
   ctx.fillStyle = '#1a1020'
@@ -158,12 +181,23 @@ function drawCard(
 
   const pad = 8
   const face = Math.min(80, w - pad * 2)
-  const portrait = getPortrait(id)
-  if (portrait) {
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(portrait, x + Math.floor((w - face) / 2), y + 16, face, face)
+  const fx = x + Math.floor((w - face) / 2)
+  const fy = y + 16
+  const split = skin2 != null && skin2 !== skin
+  const left = getPortrait(id, skin)
+  const right = split ? getPortrait(id, skin2) : undefined
+  ctx.imageSmoothingEnabled = false
+  if (left && right) {
+    const sw = sourceW(left)
+    const sh = sourceH(left)
+    const mid = Math.floor(sw / 2)
+    const destMid = Math.floor(face / 2)
+    ctx.drawImage(left, 0, 0, mid, sh, fx, fy, destMid, face)
+    ctx.drawImage(right, mid, 0, sw - mid, sh, fx + destMid, fy, face - destMid, face)
+  } else if (left) {
+    ctx.drawImage(left, fx, fy, face, face)
   } else {
-    ctx.fillStyle = meta.color
+    ctx.fillStyle = shiftHex(meta.color, id, skin)
     ctx.beginPath()
     ctx.ellipse(x + w / 2, y + 16 + face / 2, face * 0.35, face * 0.4, 0, 0, Math.PI * 2)
     ctx.fill()
@@ -187,4 +221,16 @@ function drawCard(
     ctx.font = `8px ${FONT}`
     ctx.fillText(cpu ? 'CPU' : 'P2', x + w - 16, y + 14)
   }
+}
+
+function sourceW(img: CanvasImageSource): number {
+  if (img instanceof HTMLImageElement) return img.naturalWidth || img.width
+  if (img instanceof HTMLCanvasElement) return img.width
+  return 128
+}
+
+function sourceH(img: CanvasImageSource): number {
+  if (img instanceof HTMLImageElement) return img.naturalHeight || img.height
+  if (img instanceof HTMLCanvasElement) return img.height
+  return 128
 }

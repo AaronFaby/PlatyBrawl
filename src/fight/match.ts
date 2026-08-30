@@ -1,5 +1,6 @@
 import { GROUND_Y, MAX_HP, ROUND_SECONDS, WINS_NEEDED } from '../config.ts'
 import { flushLandedHits, noteDoubleKo, notePerfect, resetCallouts, tickCallouts } from './callout.ts'
+import { sessionSkin } from '../data/skins.ts'
 import { stageForSession } from '../data/stages.ts'
 import type { VirtualInput } from '../input/virtual.ts'
 import { clashProjectiles, spawnFrom, tickProjectiles } from './projectile.ts'
@@ -23,8 +24,8 @@ export type FightWorld = {
 
 export function createMatch(session: Session): FightWorld {
   const fighters: [Fighter, Fighter] = [
-    createFighter(0, session.p1, 220, 1),
-    createFighter(1, session.p2, 500, -1),
+    createFighter(0, session.p1, 220, 1, sessionSkin(session.p1Skin)),
+    createFighter(1, session.p2, 500, -1, sessionSkin(session.p2Skin)),
   ]
   return {
     session,

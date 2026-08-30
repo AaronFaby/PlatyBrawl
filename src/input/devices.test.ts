@@ -41,6 +41,14 @@ describe('keyboard isolation', () => {
     expect(p2WantsJoin(d)).toBe(false)
   })
 
+  it('Q cycles P1 color and Slash cycles P2 color', () => {
+    const d = mockDevices(['KeyQ', 'Slash'])
+    expect(readP1(d).color).toBe(true)
+    expect(readP2(d).color).toBe(true)
+    expect(readP1(mockDevices(['Slash'])).color).toBe(false)
+    expect(readP2(mockDevices(['KeyQ'])).color).toBe(false)
+  })
+
   it('P2 arrows do not move P1', () => {
     const d = mockDevices(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyO'])
     const p1 = readP1(d)

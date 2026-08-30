@@ -1,7 +1,7 @@
 import type { CharId } from '../config.ts'
 
 export const SPECIAL_LINES: Record<CharId, string[]> = {
-  bob: ['BILL DRILL  QCF+P', 'VENOM SPUR  DP+P'],
+  bob: ['BILL DRILL  QCF+P', 'VENOM SPUR  QCF+K'],
   ninja: ['SHURIKEN  QCF+P', 'SHADOW STEP  QCB+K'],
   cyber: ['PLASMA  CHARGE B+F+P', 'ROCKET KNEE  QCF+K'],
   soldier: ['SERVICE PISTOL  QCF+P', 'COMBAT RUSH  QCF+K'],
@@ -14,7 +14,7 @@ export const MOVESET: Record<CharId, string[]> = {
     'MOVE / CROUCH / JUMP',
     'PUNCH / KICK   CROUCH+BTN LOWS',
     'BILL DRILL  ↓↘→ + P',
-    'VENOM SPUR  →↓↘ + P',
+    'VENOM SPUR  ↓↘→ + K',
     'THROW       LP+LK',
   ],
   ninja: [

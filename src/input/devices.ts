@@ -40,6 +40,8 @@ const GAME_CODES = new Set([
   'F3',
   'KeyM',
   'KeyH',
+  'KeyQ',
+  'Slash',
   'Escape',
 ])
 
@@ -53,6 +55,7 @@ export type RawStick = {
   lk: boolean
   hk: boolean
   start: boolean
+  color: boolean
 }
 
 export function emptyStick(): RawStick {
@@ -66,6 +69,7 @@ export function emptyStick(): RawStick {
     lk: false,
     hk: false,
     start: false,
+    color: false,
   }
 }
 
@@ -213,6 +217,7 @@ export function readP1(devices: DeviceState): RawStick {
   if (d.has('KeyI')) s.hp = true
   if (d.has('KeyJ')) s.lk = true
   if (d.has('KeyK')) s.hk = true
+  if (d.has('KeyQ')) s.color = true
   if (d.has('Enter') || d.has('Space')) s.start = true
   applyPad(s, devices.padArmed[0] ? devices.pads[0] : null)
   applyTouch(s, devices.touch)
@@ -231,6 +236,7 @@ export function readP2(devices: DeviceState): RawStick {
   if (d.has('Numpad5') || d.has('KeyP')) s.hp = true
   if (d.has('Numpad1') || d.has('KeyL')) s.lk = true
   if (d.has('Numpad2') || d.has('Semicolon')) s.hk = true
+  if (d.has('Slash')) s.color = true
   if (d.has('Enter')) s.start = true
   applyPad(s, devices.padArmed[1] ? devices.pads[1] : null)
   return s
@@ -248,6 +254,7 @@ function applyPad(stick: RawStick, pad: Gamepad | null): void {
   stick.lk ||= !!pad.buttons[2]?.pressed
   stick.hk ||= !!pad.buttons[3]?.pressed
   stick.start ||= !!pad.buttons[9]?.pressed
+  stick.color ||= !!pad.buttons[4]?.pressed
 }
 
 const P2_JOIN_KEYS = ['Numpad4', 'Numpad5', 'Numpad1', 'Numpad2', 'KeyO', 'KeyP', 'KeyL', 'Semicolon'] as const

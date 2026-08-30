@@ -98,6 +98,12 @@ describe('match sim', () => {
     expect(world.fighters[1].hp).toBe(960)
   })
 
+  it('copies session color skins onto fighters', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false, p1Skin: 2, p2Skin: 3 })
+    expect(world.fighters[0].skin).toBe(2)
+    expect(world.fighters[1].skin).toBe(3)
+  })
+
   it('Bob QCF+P starts Bill Drill', () => {
     const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: true })
     skip(world, 120)
@@ -111,6 +117,37 @@ describe('match sim', () => {
     p1.punchPress = true
     tickMatch(world, [p1, emptyInput()], false)
     expect(world.fighters[0].moveId === 'billDrillL' || world.fighters[0].status === 'special').toBe(true)
+  })
+
+  it('Bob QCF+K starts Venom Spur', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: true })
+    skip(world, 120)
+    let p1 = emptyInput()
+    p1 = hold(p1, { dir: 2 })
+    tickMatch(world, [p1, emptyInput()], false)
+    p1 = hold(p1, { dir: 3 })
+    tickMatch(world, [p1, emptyInput()], false)
+    p1 = hold(p1, { dir: 6, lk: true })
+    p1.lkPress = true
+    p1.kickPress = true
+    tickMatch(world, [p1, emptyInput()], false)
+    expect(world.fighters[0].moveId).toBe('venomSpurL')
+  })
+
+  it('Bob DP+P no longer starts Venom Spur', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: true })
+    skip(world, 120)
+    let p1 = emptyInput()
+    p1 = hold(p1, { dir: 6 })
+    tickMatch(world, [p1, emptyInput()], false)
+    p1 = hold(p1, { dir: 2 })
+    tickMatch(world, [p1, emptyInput()], false)
+    p1 = hold(p1, { dir: 3, lp: true })
+    p1.lpPress = true
+    p1.punchPress = true
+    tickMatch(world, [p1, emptyInput()], false)
+    expect(world.fighters[0].moveId).not.toBe('venomSpurL')
+    expect(world.fighters[0].moveId).not.toBe('venomSpurH')
   })
 
   it('Ninja QCF+P spawns a shuriken', () => {

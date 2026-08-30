@@ -15,6 +15,7 @@ import { createBuffer, matchMotion, pushDir, resetBuffer } from '../input/buffer
 import type { VirtualInput } from '../input/virtual.ts'
 import { emptyInput } from '../input/virtual.ts'
 import type { CharId } from '../config.ts'
+import { sessionSkin, type SkinId } from '../data/skins.ts'
 import { faceRel } from './boxes.ts'
 import type {
   AnimFrame,
@@ -33,11 +34,12 @@ export type FightHooks = {
   spawnProjectile: (owner: Fighter, kind: ProjectileKind, heavy: boolean) => void
 }
 
-export function createFighter(id: PlayerId, charId: CharId, x: number, facing: Facing): Fighter {
+export function createFighter(id: PlayerId, charId: CharId, x: number, facing: Facing, skin: SkinId = 0): Fighter {
   const def = getChar(charId)
   return {
     id,
     charId,
+    skin: sessionSkin(skin),
     def,
     x,
     y: GROUND_Y,

@@ -1,4 +1,5 @@
 import type { CharId } from '../config.ts'
+import { sessionSkin, shiftHex, type SkinId } from '../data/skins.ts'
 import { currentFrame, airborne, grounded } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
 import type { Cam } from './camera.ts'
@@ -16,7 +17,7 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam: Cam,
   ctx.translate(0, bob)
   const fr = currentFrame(f)
   const pose = poseFrom(f, fr.cell)
-  drawBody(ctx, f.charId, pose, f)
+  drawBody(ctx, f.charId, pose, f, sessionSkin(f.skin))
   ctx.restore()
 }
 
@@ -110,7 +111,7 @@ function poseFrom(f: Fighter, cell: number): Pose {
   return p
 }
 
-function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Fighter): void {
+function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Fighter, skin: SkinId): void {
   const squat = pose.squat
   const bodyH = 28 - squat * 10
   const bodyY = -22 + squat * 10
@@ -122,7 +123,7 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   ctx.fill()
 
   if (f.status === 'knockdown' || (f.status === 'ko' && grounded(f))) {
-    drawDowned(ctx, id)
+    drawDowned(ctx, id, skin)
     return
   }
 
@@ -131,20 +132,20 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   ctx.translate(0, pose.air * -2)
 
   // tail
-  ctx.fillStyle = tailColor(id)
+  ctx.fillStyle = tailColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(-20, bodyY + 6, 12, 5, -0.4, 0, Math.PI * 2)
   ctx.fill()
 
   // feet
-  ctx.fillStyle = footColor(id)
+  ctx.fillStyle = footColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(-6 + pose.kick * -4, 0, 8, 4, 0, 0, Math.PI * 2)
   ctx.ellipse(6 + pose.kick * 6, 0, 8, 4, 0, 0, Math.PI * 2)
   ctx.fill()
 
   // body
-  ctx.fillStyle = bodyColor(id)
+  ctx.fillStyle = bodyColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(0, bodyY, 16, bodyH * 0.55, 0, 0, Math.PI * 2)
   ctx.fill()
@@ -165,13 +166,13 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   }
 
   // arm
-  ctx.fillStyle = id === 'cyber' ? '#8aa0b0' : bodyColor(id)
+  ctx.fillStyle = id === 'cyber' ? shiftHex('#8aa0b0', id, skin) : bodyColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(8 + pose.arm * 10, bodyY - 2, 7, 4, pose.arm * 0.6, 0, Math.PI * 2)
   ctx.fill()
 
   // head
-  ctx.fillStyle = bodyColor(id)
+  ctx.fillStyle = bodyColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(6, bodyY - bodyH * 0.55, 11, 10, 0, 0, Math.PI * 2)
   ctx.fill()
@@ -182,7 +183,7 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   if (id === 'chainsaw') {
     drawSawBill(ctx, 16 + pose.bill * 6, bodyY - bodyH * 0.5, pose.bill)
   } else {
-    ctx.fillStyle = billColor(id)
+    ctx.fillStyle = billColor(id, skin)
     ctx.beginPath()
     ctx.ellipse(18 + pose.bill * 6, bodyY - bodyH * 0.5, 10 + pose.bill * 4, 4, 0.1, 0, Math.PI * 2)
     ctx.fill()
@@ -227,16 +228,16 @@ function drawBody(ctx: CanvasRenderingContext2D, id: CharId, pose: Pose, f: Figh
   ctx.restore()
 }
 
-function drawDowned(ctx: CanvasRenderingContext2D, id: CharId): void {
-  ctx.fillStyle = bodyColor(id)
+function drawDowned(ctx: CanvasRenderingContext2D, id: CharId, skin: SkinId): void {
+  ctx.fillStyle = bodyColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(0, -8, 24, 10, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = billColor(id)
+  ctx.fillStyle = billColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(20, -10, 10, 4, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = tailColor(id)
+  ctx.fillStyle = tailColor(id, skin)
   ctx.beginPath()
   ctx.ellipse(-22, -6, 10, 4, 0, 0, Math.PI * 2)
   ctx.fill()
@@ -340,18 +341,18 @@ const EXTRAS: Record<CharId, (ctx: CanvasRenderingContext2D, bodyY: number, body
   toxic: (ctx, bodyY) => drawHazmat(ctx, bodyY),
 }
 
-function bodyColor(id: CharId): string {
-  return PALETTE[id].body
+function bodyColor(id: CharId, skin: SkinId = 0): string {
+  return shiftHex(PALETTE[id].body, id, skin)
 }
 
-function billColor(id: CharId): string {
-  return PALETTE[id].bill
+function billColor(id: CharId, skin: SkinId = 0): string {
+  return shiftHex(PALETTE[id].bill, id, skin)
 }
 
-function tailColor(id: CharId): string {
-  return PALETTE[id].tail
+function tailColor(id: CharId, skin: SkinId = 0): string {
+  return shiftHex(PALETTE[id].tail, id, skin)
 }
 
-function footColor(id: CharId): string {
-  return PALETTE[id].foot
+function footColor(id: CharId, skin: SkinId = 0): string {
+  return shiftHex(PALETTE[id].foot, id, skin)
 }

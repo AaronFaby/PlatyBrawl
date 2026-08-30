@@ -22,6 +22,13 @@ describe('pickCpuOpponent', () => {
     }
   })
 
+  it('lists bob bill drill on QCF+P and venom spur on QCF+K', () => {
+    const bob = getChar('bob')
+    expect(bob.specials.some((s) => s.motion === 'qcf' && s.button === 'p' && s.light === 'billDrillL')).toBe(true)
+    expect(bob.specials.some((s) => s.motion === 'qcf' && s.button === 'k' && s.light === 'venomSpurL')).toBe(true)
+    expect(bob.specials.some((s) => s.motion === 'dp')).toBe(false)
+  })
+
   it('lists soldier with a pistol special', () => {
     expect(CHAR_IDS).toContain('soldier')
     const soldier = getChar('soldier')

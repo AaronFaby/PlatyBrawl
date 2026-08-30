@@ -90,12 +90,8 @@ function qcbKick(cpu: CpuBrain, me: Fighter): void {
   pushMotion(cpu.plan, [2, 1, 4], rand() < 0.5 ? 'hk' : 'lk', me.facing)
 }
 
-function dpPunch(cpu: CpuBrain, me: Fighter): void {
-  pushMotion(cpu.plan, [6, 2, 3], rand() < 0.5 ? 'hp' : 'lp', me.facing)
-}
-
 const ANTI_AIR: Record<CharId, (cpu: CpuBrain, me: Fighter) => void> = {
-  bob: dpPunch,
+  bob: qcfKick,
   ninja: qcfPunch,
   cyber: qcfKick,
   soldier: qcfPunch,

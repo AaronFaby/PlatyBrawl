@@ -77,6 +77,22 @@ describe('cpu difficulty', () => {
     expect(knees).toBeGreaterThan(0)
   })
 
+  it('bob anti-airs with QCF+K, not a DP', () => {
+    const world = createMatch({ p1: 'ninja', p2: 'bob', p2Cpu: true })
+    for (let i = 0; i < 120; i++) tickMatch(world, [emptyInput(), emptyInput()], false)
+    world.fighters[0].status = 'jump'
+    world.fighters[0].y = 180
+    world.fighters[1].x = world.fighters[0].x + 50
+    const cpu = createCpu('hard')
+    cpu.cool = 0
+    cpu.plan = []
+    tickCpu(cpu, world.fighters[1], world.fighters[0])
+    const dirs = cpu.plan.map((s) => s.dir)
+    const kick = cpu.plan.some((s) => s.lk || s.hk)
+    expect(dirs.slice(0, 3)).toEqual([2, 1, 4])
+    expect(kick).toBe(true)
+  })
+
   it('hard ninja anti-airs with a ninja motion, not Bob DP', () => {
     const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: true })
     for (let i = 0; i < 120; i++) tickMatch(world, [emptyInput(), emptyInput()], false)

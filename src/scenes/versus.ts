@@ -2,6 +2,7 @@ import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W } from '../config.ts'
 import { startFightBgm } from '../audio/bgm.ts'
 import { fightTrack } from '../data/themes.ts'
 import { sfxStart } from '../audio/sfx.ts'
+import { sessionSkin, shiftHex } from '../data/skins.ts'
 import { getPortrait, loadAllStages } from '../render/sprite.ts'
 import type { Game, Scene } from './context.ts'
 
@@ -41,18 +42,18 @@ export function versusScene(game: Game): Scene {
         : ''
       ctx.fillText(cpuTag + p2.subtitle, 350, 96)
 
-      const port1 = getPortrait(game.session.p1)
-      const port2 = getPortrait(game.session.p2)
+      const port1 = getPortrait(game.session.p1, sessionSkin(game.session.p1Skin))
+      const port2 = getPortrait(game.session.p2, sessionSkin(game.session.p2Skin))
       if (port1) ctx.drawImage(port1, 82, 112, 96, 96)
       else {
-        ctx.fillStyle = p1.color
+        ctx.fillStyle = shiftHex(p1.color, game.session.p1, sessionSkin(game.session.p1Skin))
         ctx.beginPath()
         ctx.ellipse(130, 160, 36, 40, 0, 0, Math.PI * 2)
         ctx.fill()
       }
       if (port2) ctx.drawImage(port2, 302, 112, 96, 96)
       else {
-        ctx.fillStyle = p2.color
+        ctx.fillStyle = shiftHex(p2.color, game.session.p2, sessionSkin(game.session.p2Skin))
         ctx.beginPath()
         ctx.ellipse(350, 160, 36, 40, 0, 0, Math.PI * 2)
         ctx.fill()

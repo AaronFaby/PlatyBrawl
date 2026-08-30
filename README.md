@@ -11,7 +11,7 @@ If you are changing code, read [AGENTS.md](AGENTS.md).
 ## How to play
 
 1. **Title** — Press Enter, Space, or a punch to start.
-2. **Select** — P1 picks a platy with A/D and locks with U (or I / J / K). W/S sets CPU Normal or Hard.
+2. **Select** — P1 picks a platy with A/D and locks with U (or I / J / K). **Q** cycles that portrait's color (four costumes). W/S sets CPU Normal or Hard. P2 uses **/** for color.
 3. **Stage / music** — Random is already selected. You start on the music list. **W/S** highlights a song and plays a sample (silent if music is off). **A/D** switches to the stage column. **U** locks. **J** goes back.
 4. **VS** — A short intro, then the match.
 5. **Fight** — Best of three (first to two rounds). Each round is 99 seconds.
@@ -19,7 +19,7 @@ If you are changing code, read [AGENTS.md](AGENTS.md).
 
 Default mode is **versus CPU** on **Normal**. After P1 locks, the CPU is assigned one of the characters you did not pick. You cannot steer the CPU cursor.
 
-To play **human versus human**, press a P2 attack (**O**, **P**, **L**, **;**, or numpad 4/5/1/2) *before* P1 locks. Then P2 picks with the arrow keys and locks with **O**.
+To play **human versus human**, press a P2 attack (**O**, **P**, **L**, **;**, or numpad 4/5/1/2) *before* P1 locks. That first press only sits P2 down. Then P2 picks with the arrow keys, **/** for color, and locks with **O**.
 
 During a match, press **H** to pause and show both characters' movesets. **H** or **Esc** resumes.
 
@@ -38,7 +38,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 
 | Fighter | Style | Specials |
 | --- | --- | --- |
-| **Bob the Platy** | All-rounder | **Bill Drill** `↓ ↘ → + P` · **Venom Spur** `→ ↓ ↘ + P` |
+| **Bob the Platy** | All-rounder | **Bill Drill** `↓ ↘ → + P` · **Venom Spur** `↓ ↘ → + K` |
 | **Ninja Platy** | Rushdown | **Shuriken** `↓ ↘ → + P` · **Shadow Step** `↓ ↙ ← + K` |
 | **Cyberplaty** | Zoner | **Plasma** hold `←` then `→ + P` · **Rocket Knee** `↓ ↘ → + K` |
 | **Soldier Platy** | Gunner | **Service Pistol** `↓ ↘ → + P` · **Combat Rush** `↓ ↘ → + K` |
@@ -78,6 +78,7 @@ Each fighter has their own 90s chip theme. You can pick any theme, or Random. Th
 | Move / crouch / jump | **A D S W** |
 | Light / heavy punch | **U** / **I** |
 | Light / heavy kick | **J** / **K** |
+| Color (select) | **Q** |
 | Start | **Enter** or **Space** |
 
 ### Player 2
@@ -87,6 +88,7 @@ Each fighter has their own 90s chip theme. You can pick any theme, or Random. Th
 | Move / crouch / jump | **← → ↓ ↑** |
 | Light / heavy punch | **O** / **P** (or numpad **4** / **5**) |
 | Light / heavy kick | **L** / **;** (or numpad **1** / **2**) |
+| Color (select) | **/** |
 
 ### System
 
@@ -95,7 +97,7 @@ Each fighter has their own 90s chip theme. You can pick any theme, or Random. Th
 | Mute / unmute music | **M** (saved in the browser) |
 | Pause + moveset overlay | **H** (Esc also resumes) |
 
-A standard gamepad works too. The first pad is P1. A second distinct pad is P2. Press a face button once to arm that pad (this ignores stick drift until then). Face buttons are LP / HP / LK / HK. The Start button also starts.
+A standard gamepad works too. The first pad is P1. A second distinct pad is P2. Press a face button once to arm that pad (this ignores stick drift until then). Face buttons are LP / HP / LK / HK. Left bumper cycles color on select. The Start button also starts.
 
 On a phone or tablet, an on-screen d-pad and six buttons appear. They drive Player 1. Pinch-zoom stays available.
 

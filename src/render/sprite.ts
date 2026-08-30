@@ -1,5 +1,6 @@
 import type { CharId } from '../config.ts'
 import { CHAR_IDS } from '../config.ts'
+import { recolorImage, sessionSkin, type SkinId } from '../data/skins.ts'
 import { STAGE_IDS, stageUrl, type StageId } from '../data/stages.ts'
 import { currentFrame, grounded } from '../fight/fighter.ts'
 import type { Fighter } from '../fight/types.ts'
@@ -114,10 +115,11 @@ export async function loadSprites(): Promise<void> {
 
 export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam: Cam): boolean {
   const pose = poseForAnim(f.anim, currentFrame(f).cell, f.charId)
-  const img = bank.chars[f.charId][pose] ?? bank.chars[f.charId].idle
-  if (!img) return false
-  const idleImg = bank.chars[f.charId].idle ?? img
-  const scale = spriteDrawScale(opaqueRect(idleImg).h, opaqueRect(img).h, pose === 'crouch')
+  const src = bank.chars[f.charId][pose] ?? bank.chars[f.charId].idle
+  if (!src) return false
+  const idleImg = bank.chars[f.charId].idle ?? src
+  const img = recolorImage(src, f.charId, sessionSkin(f.skin), pose)
+  const scale = spriteDrawScale(opaqueRect(idleImg).h, opaqueRect(src).h, pose === 'crouch')
   const x = f.x - cam.x
   const y = f.y - cam.y
   ctx.save()
@@ -140,6 +142,8 @@ export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam
   return true
 }
 
-export function getPortrait(id: CharId): HTMLImageElement | undefined {
-  return bank.chars[id].portrait
+export function getPortrait(id: CharId, skin: SkinId = 0): CanvasImageSource | undefined {
+  const src = bank.chars[id].portrait
+  if (!src) return undefined
+  return recolorImage(src, id, sessionSkin(skin), 'portrait')
 }

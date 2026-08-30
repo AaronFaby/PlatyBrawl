@@ -1,4 +1,5 @@
 import type { CharId } from '../config.ts'
+import type { SkinId } from '../data/skins.ts'
 import type { StageId, StagePick } from '../data/stages.ts'
 
 export type PlayerId = 0 | 1
@@ -99,6 +100,7 @@ export type InputBuffer = {
 export type Fighter = {
   id: PlayerId
   charId: CharId
+  skin: SkinId
   def: CharDef
   x: number
   y: number
@@ -192,4 +194,6 @@ export type Session = {
   cpuDifficulty?: CpuDifficulty
   stageId?: StagePick
   bgmId?: CharId
+  p1Skin?: SkinId
+  p2Skin?: SkinId
 }
