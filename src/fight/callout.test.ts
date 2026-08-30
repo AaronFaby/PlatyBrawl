@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
+import { cancelAnnounce, spokenCallouts } from '../audio/announce.ts'
 import { CALLOUT, EXCELLENT_HITS, REVERSAL_WINDOW, noteLandedHit, pushCallout, tickCallouts } from './callout.ts'
 import { startMove } from './fighter.ts'
 import { createMatch, tickMatch } from './match.ts'
@@ -35,46 +36,6 @@ function jab(world: ReturnType<typeof createMatch>, dummy = false): void {
   world.fighters[1].x = world.fighters[0].x + 28
   tickMatch(world, [hold(emptyInput(), { lp: true }), emptyInput()], dummy)
   skip(world, 12, dummy)
-}
-
-function withSpeech(run: (spoken: string[]) => void): void {
-  const spoken: string[] = []
-  const g = globalThis as {
-    window?: unknown
-    SpeechSynthesisUtterance?: unknown
-  }
-  const prevWindow = g.window
-  const prevUtter = g.SpeechSynthesisUtterance
-  class FakeUtterance {
-    text: string
-    lang = ''
-    rate = 1
-    pitch = 1
-    volume = 1
-    voice = null
-    constructor(text: string) {
-      this.text = text
-    }
-  }
-  g.SpeechSynthesisUtterance = FakeUtterance
-  g.window = {
-    speechSynthesis: {
-      getVoices: () => [],
-      cancel() {},
-      speak(u: { text: string }) {
-        spoken.push(u.text)
-      },
-      addEventListener() {},
-    },
-  }
-  try {
-    run(spoken)
-  } finally {
-    if (prevWindow === undefined) delete g.window
-    else g.window = prevWindow
-    if (prevUtter === undefined) delete g.SpeechSynthesisUtterance
-    else g.SpeechSynthesisUtterance = prevUtter
-  }
 }
 
 describe('callouts', () => {
@@ -233,35 +194,32 @@ describe('callouts', () => {
   })
 
   it('speaks again when a live callout is refreshed', () => {
-    withSpeech((spoken) => {
-      const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
-      skip(world, 120)
-      pushCallout(world.match, CALLOUT.counter)
-      pushCallout(world.match, CALLOUT.counter)
-      expect(spoken.filter((t) => t === 'Counter!')).toHaveLength(2)
-    })
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    cancelAnnounce()
+    pushCallout(world.match, CALLOUT.counter)
+    pushCallout(world.match, CALLOUT.counter)
+    expect(spokenCallouts().filter((t) => t === 'Counter!')).toHaveLength(2)
   })
 
   it('keeps a same-frame COUNTER quiet under FIRST STRIKE', () => {
-    withSpeech((spoken) => {
-      const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
-      skip(world, 120)
-      world.fighters[1].status = 'attack'
-      noteLandedHit(world.match, world.fighters[0], world.fighters[1])
-      expect(spoken).toContain('First strike!')
-      expect(spoken).not.toContain('Counter!')
-    })
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    cancelAnnounce()
+    world.fighters[1].status = 'attack'
+    noteLandedHit(world.match, world.fighters[0], world.fighters[1])
+    expect(spokenCallouts()).toContain('First strike!')
+    expect(spokenCallouts()).not.toContain('Counter!')
   })
 
   it('lets COUNTER speak on a later simulation frame', () => {
-    withSpeech((spoken) => {
-      const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
-      skip(world, 120)
-      pushCallout(world.match, CALLOUT.first)
-      tickCallouts(world.match)
-      pushCallout(world.match, CALLOUT.counter)
-      expect(spoken).toEqual(['First strike!', 'Counter!'])
-    })
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    cancelAnnounce()
+    pushCallout(world.match, CALLOUT.first)
+    tickCallouts(world.match)
+    pushCallout(world.match, CALLOUT.counter)
+    expect(spokenCallouts()).toEqual(['First strike!', 'Counter!'])
   })
 
   it('new round clears first strike and streak', () => {

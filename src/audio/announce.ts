@@ -1,4 +1,4 @@
-import { duckMusic } from './engine.ts'
+import { ac, duckMusic, sfxDest } from './engine.ts'
 
 const LINE: Record<string, string> = {
   'FIRST STRIKE!': 'First strike!',
@@ -7,6 +7,15 @@ const LINE: Record<string, string> = {
   EXCELLENT: 'Excellent!',
   PERFECT: 'Perfect!',
   'DOUBLE K.O.': 'Double K.O.!',
+}
+
+const CLIP: Record<string, string> = {
+  'FIRST STRIKE!': '/announce/first-strike.mp3',
+  'COUNTER!': '/announce/counter.mp3',
+  'REVERSAL!': '/announce/reversal.mp3',
+  EXCELLENT: '/announce/excellent.mp3',
+  PERFECT: '/announce/perfect.mp3',
+  'DOUBLE K.O.': '/announce/double-ko.mp3',
 }
 
 const PRIORITY: Record<string, number> = {
@@ -18,54 +27,95 @@ const PRIORITY: Record<string, number> = {
   EXCELLENT: 1,
 }
 
+const CLIP_GAIN = 0.9
+
+const buffers = new Map<string, AudioBuffer>()
+const spoken: string[] = []
+
 let spokenPriority = -1
-let voice: SpeechSynthesisVoice | null | undefined
+let current: AudioBufferSourceNode | null = null
+let loading: Promise<void> | null = null
+let pending: string | null = null
 
-function synth(): SpeechSynthesis | null {
-  if (typeof window === 'undefined' || typeof window.speechSynthesis === 'undefined') return null
-  return window.speechSynthesis
+function inPage(): boolean {
+  return typeof window !== 'undefined' && typeof document !== 'undefined'
 }
 
-function pickVoice(s: SpeechSynthesis): SpeechSynthesisVoice | null {
-  if (voice !== undefined) return voice
-  const voices = s.getVoices()
-  if (!voices.length) return null
-  voice =
-    voices.find((v) => /en(-|_)US/i.test(v.lang) && /male|david|daniel|alex|fred|google us english/i.test(v.name)) ??
-    voices.find((v) => /^en/i.test(v.lang) && /male|david|daniel|alex|fred/i.test(v.name)) ??
-    voices.find((v) => /^en/i.test(v.lang)) ??
-    voices[0]
-  return voice
+function hasWebAudio(): boolean {
+  return typeof AudioContext !== 'undefined'
 }
 
-function bindVoices(s: SpeechSynthesis): void {
-  if (typeof s.addEventListener === 'function') {
-    s.addEventListener('voiceschanged', () => {
-      voice = undefined
-      pickVoice(s)
+function stopCurrent(): void {
+  if (!current) return
+  try {
+    current.stop()
+  } catch {
+    // already stopped
+  }
+  current = null
+}
+
+async function loadClips(): Promise<void> {
+  if (!inPage() || !hasWebAudio()) return
+  const ctx = ac()
+  await Promise.all(
+    Object.entries(CLIP).map(async ([text, url]) => {
+      if (buffers.has(text)) return
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`announce clip ${url} ${res.status}`)
+      const raw = await res.arrayBuffer()
+      buffers.set(text, await ctx.decodeAudioData(raw.slice(0)))
+    }),
+  )
+  if (pending && buffers.has(pending)) {
+    const text = pending
+    pending = null
+    play(text)
+  }
+}
+
+function ensureClips(): Promise<void> {
+  if (!loading) {
+    loading = loadClips().catch((err) => {
+      loading = null
+      console.warn('announce clips failed to load', err)
     })
   }
+  return loading
 }
 
-let bound = false
+function play(text: string): void {
+  const buf = buffers.get(text)
+  if (!buf) {
+    pending = text
+    void ensureClips()
+    return
+  }
+  pending = null
+  if (!hasWebAudio()) return
+  stopCurrent()
+  const ctx = ac()
+  const src = ctx.createBufferSource()
+  src.buffer = buf
+  const g = ctx.createGain()
+  g.gain.value = CLIP_GAIN
+  src.connect(g)
+  g.connect(sfxDest())
+  duckMusic(Math.max(0.7, buf.duration + 0.08))
+  src.onended = () => {
+    if (current === src) current = null
+  }
+  current = src
+  src.start()
+}
+
+export function spokenCallouts(): readonly string[] {
+  return spoken
+}
 
 export function unlockAnnounce(): void {
-  const s = synth()
-  if (!s) return
-  if (!bound) {
-    bound = true
-    bindVoices(s)
-  }
-  pickVoice(s)
-  try {
-    s.cancel()
-    const warm = new SpeechSynthesisUtterance(' ')
-    warm.volume = 0
-    s.speak(warm)
-    s.cancel()
-  } catch {
-    // Some engines reject a zero-volume warm-up; later speakCallout still runs.
-  }
+  if (!inPage() || !hasWebAudio()) return
+  void ensureClips()
 }
 
 export function beginAnnounceFrame(): void {
@@ -74,32 +124,17 @@ export function beginAnnounceFrame(): void {
 
 export function cancelAnnounce(): void {
   spokenPriority = -1
-  try {
-    synth()?.cancel()
-  } catch {
-    // ignore
-  }
+  spoken.length = 0
+  pending = null
+  stopCurrent()
 }
 
 export function speakCallout(text: string): void {
-  const s = synth()
-  if (!s) return
   const line = LINE[text] ?? text.replace(/!/g, '')
   const pri = PRIORITY[text] ?? 0
   if (pri < spokenPriority) return
   spokenPriority = pri
-  const u = new SpeechSynthesisUtterance(line)
-  u.lang = 'en-US'
-  u.rate = 0.92
-  u.pitch = 0.72
-  u.volume = 1
-  const chosen = pickVoice(s)
-  if (chosen) u.voice = chosen
-  try {
-    s.cancel()
-    duckMusic(0.7)
-    s.speak(u)
-  } catch {
-    // Speech can fail in locked autoplay contexts; the on-screen callout still shows.
-  }
+  spoken.push(line)
+  if (!CLIP[text] || !inPage() || !hasWebAudio()) return
+  play(text)
 }

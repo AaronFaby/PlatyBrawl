@@ -18,6 +18,7 @@ npm run build     # tsc && vite build
 npm run preview
 npm run playtest  # puppeteer screenshots; start `npm run dev` first
 npm run sprites -- --src /path/to/images   # chroma-key and pack poses
+python3 scripts/announce_tts.py            # regen Zagan callout clips (needs XAI_API_KEY)
 npm run deploy    # build, then wrangler deploy
 ```
 
@@ -38,9 +39,10 @@ src/data/roster.ts   getChar, pickCpuOpponent
 src/data/themes.ts   fight theme ids + names
 src/ai/cpu.ts        CPU brain (normal / hard)
 src/render/          sprites, stage, HUD, camera, fallback stick figures
-src/audio/           Web Audio SFX + chip BGM (title, win, one track per CharId) + Web Speech callouts
+src/audio/           Web Audio SFX + chip BGM (title, win, one track per CharId) + Zagan callout clips
 public/sprites/<id>/ pose PNGs
 public/stage/        one home stage per fighter (960×540 jpg)
+public/announce/     first-strike, counter, reversal, excellent, perfect, double-ko mp3s
 ```
 
 **Sim versus view.** `startLoop` runs `step()` at 60 Hz and draws every animation frame. Match logic, hitboxes, and CPU plans belong in the sim. Drawing reads fighter state; it must not write gameplay state.
@@ -94,7 +96,7 @@ World offset of sprite pixel `(px, py)` is `((px - 80) * scale, (py - 156) * sca
 - Projectile kinds today: `shuriken` (ninja), `beam` (cyber plasma), `bullet` (soldier pistol), `chain` (chainsaw hook; on hit reels the defender in over several frames), `gas` (toxic bomb; unblocked hit applies poison DoT). Spawn points are sprite-space muzzles on the firing pose, converted with `spriteDrawScale`.
 - Anim flags can also set `invuln`, `invulnHead`, `armorHits`, `teleport`, `radBuff` (Toxic Meltdown: next unblocked damaging hit deals 2×).
 - Poison and Meltdown charges live on the fighter (`poisonLeft` / `radHits`) and clear on `resetFighter`.
-- Arcade callouts live on `MatchState.callouts` (`src/fight/callout.ts`). **FIRST STRIKE!** is the first unblocked damaging hit or throw of the round. **COUNTER!** is a hit during the opponent's attack/special/throw. **REVERSAL!** is a hit from a move started in the wakeup/land window (`REVERSAL_WINDOW`). Projectile hits use the `reversal` flag stamped at spawn, not the owner's current move. **EXCELLENT** is four unanswered unblocked hits. Strike and projectile hits from one frame are flushed together, so a trade resets both streaks and cannot award EXCELLENT. **PERFECT** is a KO while the winner is at full HP. **DOUBLE K.O.** is both at 0. Poison DoT and blocked/armor hits do not count. `startRound` resets the streak and first-strike flag. `pushCallout` speaks the line even when it only refreshes a live pop-up (`src/audio/announce.ts`, Web Speech API). Lower-priority lines in the same simulation frame stay quiet; the next frame can speak. `unlockAnnounce` runs on the first user gesture.
+- Arcade callouts live on `MatchState.callouts` (`src/fight/callout.ts`). **FIRST STRIKE!** is the first unblocked damaging hit or throw of the round. **COUNTER!** is a hit during the opponent's attack/special/throw. **REVERSAL!** is a hit from a move started in the wakeup/land window (`REVERSAL_WINDOW`). Projectile hits use the `reversal` flag stamped at spawn, not the owner's current move. **EXCELLENT** is four unanswered unblocked hits. Strike and projectile hits from one frame are flushed together, so a trade resets both streaks and cannot award EXCELLENT. **PERFECT** is a KO while the winner is at full HP. **DOUBLE K.O.** is both at 0. Poison DoT and blocked/armor hits do not count. `startRound` resets the streak and first-strike flag. `pushCallout` speaks the line even when it only refreshes a live pop-up (`src/audio/announce.ts` plays Zagan MP3s on the SFX bus). Lower-priority lines in the same simulation frame stay quiet; the next frame can speak. `unlockAnnounce` preloads the clips on the first user gesture. Regen clips with `python3 scripts/announce_tts.py` (Zagan, speed 1.5).
 
 If you rename a move, update the character file, `moves.ts`, the special `pose` field, and any CPU plan that hardcodes that motion. `poseForAnim` reads specials off `CharDef`.
 

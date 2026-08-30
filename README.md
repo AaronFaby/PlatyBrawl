@@ -162,7 +162,9 @@ src/
   render/            sprites, stage, HUD, camera
 public/sprites/      per-character pose PNGs
 public/stage/        billabong, dojo, neonlab, armybase, toolshed
+public/announce/     Zagan callout clips (first strike, counter, …)
 scripts/process_sprites.py   chroma-key + pack generated art (`--src`, `sprite_map.json`)
+scripts/announce_tts.py      regen Zagan callout clips (`XAI_API_KEY`, speed 1.5)
 scripts/playtest.mjs         headless cabinet walkthrough
 AGENTS.md            notes for coding agents
 ```
