@@ -8,11 +8,64 @@ import {
   poseForAnim,
   SPRITE_ORIGIN_X,
   SPRITE_ORIGIN_Y,
-  SPRITE_SCALE,
   spriteUrl,
   type Pose,
 } from '../assets/manifest.ts'
 import type { Cam } from './camera.ts'
+
+/** Idle content height in sprite pixels, mapped to world size. */
+export const IDLE_DRAW_H = 72
+
+export type SrcRect = { x: number; y: number; w: number; h: number }
+
+const opaqueCache = new WeakMap<HTMLImageElement, SrcRect>()
+
+export function opaqueRect(img: HTMLImageElement): SrcRect {
+  const hit = opaqueCache.get(img)
+  if (hit) return hit
+  const w = img.naturalWidth || img.width
+  const h = img.naturalHeight || img.height
+  const fallback = { x: 0, y: 0, w, h }
+  let rect = fallback
+  try {
+    const scratch = document.createElement('canvas')
+    scratch.width = w
+    scratch.height = h
+    const g = scratch.getContext('2d', { willReadFrequently: true })
+    if (g) {
+      g.drawImage(img, 0, 0)
+      const pix = g.getImageData(0, 0, w, h).data
+      let x0 = w
+      let y0 = h
+      let x1 = 0
+      let y1 = 0
+      for (let y = 0; y < h; y++) {
+        const row = y * w * 4
+        for (let x = 0; x < w; x++) {
+          if (pix[row + x * 4 + 3] < 12) continue
+          if (x < x0) x0 = x
+          if (y < y0) y0 = y
+          if (x > x1) x1 = x
+          if (y > y1) y1 = y
+        }
+      }
+      if (x1 >= x0) rect = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }
+    }
+  } catch {
+    rect = fallback
+  }
+  opaqueCache.set(img, rect)
+  return rect
+}
+
+export function spriteDrawScale(idleH: number, poseH: number, crouch: boolean): number {
+  const ih = Math.max(1, idleH)
+  const ph = Math.max(1, poseH)
+  const base = IDLE_DRAW_H / ih
+  if (crouch) return Math.min(base, IDLE_DRAW_H / ph)
+  if (ph >= ih) return base
+  return IDLE_DRAW_H / ph
+}
 
 export type SpriteBank = {
   chars: Record<CharId, Partial<Record<Pose | 'portrait', HTMLImageElement>>>
@@ -71,11 +124,13 @@ export function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, cam
   const pose = poseForAnim(f.anim, currentFrame(f).cell, f.charId)
   const img = bank.chars[f.charId][pose] ?? bank.chars[f.charId].idle
   if (!img) return false
+  const idleImg = bank.chars[f.charId].idle ?? img
+  const scale = spriteDrawScale(opaqueRect(idleImg).h, opaqueRect(img).h, pose === 'crouch')
   const x = f.x - cam.x
   const y = f.y - cam.y
   ctx.save()
   ctx.translate(Math.round(x), Math.round(y))
-  ctx.scale(f.facing * SPRITE_SCALE, SPRITE_SCALE)
+  ctx.scale(f.facing * scale, scale)
   if (f.status === 'knockdown' || (f.status === 'ko' && grounded(f))) ctx.rotate(-1.2)
   if (f.radHits > 0) {
     ctx.save()

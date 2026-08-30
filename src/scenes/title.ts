@@ -3,7 +3,7 @@ import type { CharId } from '../config.ts'
 import { ac, sfxStart } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { drawControlCard } from '../render/hud.ts'
-import { bank } from '../render/sprite.ts'
+import { bank, opaqueRect } from '../render/sprite.ts'
 import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
 
 const TITLE_FIGHTER_H = 50
@@ -91,47 +91,6 @@ export function titleScene(game: Game): Scene {
       ctx.restore()
     },
   }
-}
-
-type SrcRect = { x: number; y: number; w: number; h: number }
-const opaqueCache = new WeakMap<HTMLImageElement, SrcRect>()
-
-function opaqueRect(img: HTMLImageElement): SrcRect {
-  const hit = opaqueCache.get(img)
-  if (hit) return hit
-  const w = img.naturalWidth || img.width
-  const h = img.naturalHeight || img.height
-  const fallback = { x: 0, y: 0, w, h }
-  let rect = fallback
-  try {
-    const scratch = document.createElement('canvas')
-    scratch.width = w
-    scratch.height = h
-    const g = scratch.getContext('2d')
-    if (g) {
-      g.drawImage(img, 0, 0)
-      const pix = g.getImageData(0, 0, w, h).data
-      let x0 = w
-      let y0 = h
-      let x1 = 0
-      let y1 = 0
-      for (let y = 0; y < h; y++) {
-        const row = y * w * 4
-        for (let x = 0; x < w; x++) {
-          if (pix[row + x * 4 + 3] < 12) continue
-          if (x < x0) x0 = x
-          if (y < y0) y0 = y
-          if (x > x1) x1 = x
-          if (y > y1) y1 = y
-        }
-      }
-      if (x1 >= x0) rect = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }
-    }
-  } catch {
-    rect = fallback
-  }
-  opaqueCache.set(img, rect)
-  return rect
 }
 
 function drawTitleFighter(ctx: CanvasRenderingContext2D, id: CharId, x: number, y: number): void {

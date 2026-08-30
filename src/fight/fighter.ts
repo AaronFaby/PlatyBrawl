@@ -67,6 +67,8 @@ export function createFighter(id: PlayerId, charId: CharId, x: number, facing: F
     poisonEvery: 0,
     poisonAcc: 0,
     radHits: 0,
+    lpTap: -99,
+    lkTap: -99,
   }
 }
 
@@ -98,6 +100,8 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.poisonEvery = 0
   f.poisonAcc = 0
   f.radHits = 0
+  f.lpTap = -99
+  f.lkTap = -99
   resetBuffer(f.buffer)
 }
 
@@ -245,15 +249,26 @@ function trySpecial(f: Fighter, input: VirtualInput, hooks: FightHooks, allow?: 
   return false
 }
 
-function tryThrow(f: Fighter, input: VirtualInput, other: Fighter): boolean {
+function wantsThrow(f: Fighter, input: VirtualInput): boolean {
+  if (!input.lp || !input.lk) return false
+  return Math.abs(f.lpTap - f.lkTap) <= 8
+}
+
+function canThrowNow(f: Fighter): boolean {
+  if (actionable(f)) return true
+  if (f.status !== 'attack' || f.hasHit || f.frameIndex > 1) return false
+  const id = f.moveId
+  return id === 'standLP' || id === 'standLK' || id === 'crouchLP' || id === 'jumpLP'
+}
+
+function tryThrow(f: Fighter, other: Fighter): boolean {
   if (!grounded(f) || !grounded(other)) return false
-  const both = input.lp && input.lk && (input.lpPress || input.lkPress)
-  if (!both) return false
   if (Math.abs(other.x - f.x) > THROW_RANGE) return false
   if (other.status === 'knockdown' || other.status === 'wakeup' || other.status === 'ko' || other.status === 'thrown') {
     return false
   }
   startMove(f, 'throw')
+  f.vx = 0
   other.status = 'thrown'
   other.anim = 'thrown'
   other.frameIndex = 0
@@ -441,6 +456,8 @@ export function faceOpponent(f: Fighter, other: Fighter): void {
 export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, locked: boolean): void {
   if (f.flash > 0) f.flash -= 1
   if (f.wakeupInvuln > 0) f.wakeupInvuln -= 1
+  if (input.lpPress) f.lpTap = hooks.frame
+  if (input.lkPress) f.lkTap = hooks.frame
   pushDir(f.buffer, input.dir, hooks.frame, f.facing)
 
   if (f.hitstop > 0) {
@@ -479,14 +496,15 @@ export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, 
       (f.status === 'jump' && !f.moveId) ||
       ((f.status === 'attack' || f.status === 'special') && f.canCancel))
 
+  const grab = wantsThrow(f, input) && canThrowNow(f)
   if (canAct && (f.status === 'attack' || f.status === 'special')) {
     tryCancel(f, input, hooks)
+  } else if (canAct && !locked && trySpecial(f, input, hooks)) {
+    // motion specials beat throw
+  } else if (!locked && grab) {
+    if (!tryThrow(f, hooks.other) && actionable(f)) locomotion(f, input, locked)
   } else if (canAct && !locked && f.status !== 'hurt' && f.status !== 'block' && f.status !== 'knockdown' && f.status !== 'wakeup' && f.status !== 'land' && f.status !== 'thrown') {
-    if (actionable(f) && tryThrow(f, input, hooks.other)) {
-      // thrown handled
-    } else if (trySpecial(f, input, hooks)) {
-      // special
-    } else if (tryNormals(f, input)) {
+    if (tryNormals(f, input)) {
       // normal
     } else {
       locomotion(f, input, locked)

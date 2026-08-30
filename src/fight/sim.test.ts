@@ -421,10 +421,68 @@ describe('match sim', () => {
     expect(jabPush).toBeGreaterThan(0)
   })
 
+  it('throw wins over a jab when LP then LK are pressed close', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 28
+    tickMatch(world, [hold(emptyInput(), { lp: true }), emptyInput()], false)
+    expect(world.fighters[0].moveId).toBe('standLP')
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).toBe('throw')
+    expect(world.fighters[1].hp).toBe(860)
+  })
+
+  it('LP+LK out of range does not start a punch', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 130
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).toBe('idle')
+    expect(world.fighters[0].moveId).toBeNull()
+  })
+
+  it('LP+LK out of range still allows walking', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 130
+    const x = world.fighters[0].x
+    let p1 = hold(emptyInput(), { lp: true, lk: true, dir: 6 })
+    tickMatch(world, [p1, emptyInput()], false)
+    p1 = hold(p1, { lp: true, lk: true, dir: 6 })
+    tickMatch(world, [p1, emptyInput()], false)
+    expect(world.fighters[0].x).toBeGreaterThan(x)
+    expect(world.fighters[0].status).not.toBe('attack')
+    expect(world.fighters[0].moveId).toBeNull()
+  })
+
+  it('holding LP+LK while walking in completes a throw', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 130
+    let p1 = hold(emptyInput(), { lp: true, lk: true, dir: 6 })
+    tickMatch(world, [p1, emptyInput()], false)
+    expect(world.fighters[0].status).not.toBe('throw')
+    for (let i = 0; i < 80 && world.fighters[0].status !== 'throw'; i++) {
+      p1 = hold(p1, { lp: true, lk: true, dir: 6 })
+      tickMatch(world, [p1, emptyInput()], false)
+    }
+    expect(world.fighters[0].status).toBe('throw')
+    expect(world.fighters[1].hp).toBe(860)
+  })
+
+  it('throw connects at visual contact, not only pushbox range', () => {
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(world, 120)
+    world.fighters[1].x = world.fighters[0].x + 70
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
+    expect(world.fighters[0].status).toBe('throw')
+    expect(world.fighters[1].hp).toBe(860)
+  })
+
   it('throw requires LP+LK in range on the ground', () => {
     const miss = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
     skip(miss, 120)
-    miss.fighters[1].x = miss.fighters[0].x + 80
+    miss.fighters[1].x = miss.fighters[0].x + 130
     tickMatch(miss, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
     expect(miss.fighters[0].status).not.toBe('throw')
     expect(miss.fighters[1].hp).toBe(1000)

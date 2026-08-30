@@ -129,6 +129,8 @@ export type Fighter = {
   poisonEvery: number
   poisonAcc: number
   radHits: number
+  lpTap: number
+  lkTap: number
 }
 
 export type Projectile = {
