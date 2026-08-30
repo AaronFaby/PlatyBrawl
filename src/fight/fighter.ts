@@ -284,7 +284,7 @@ function tryThrow(f: Fighter, other: Fighter, match: MatchState): boolean {
   other.moveId = null
   other.stun = 20
   other.pendingKd = true
-  let throwDmg = f.def.moves.throw?.damage ?? 140
+  let throwDmg = f.def.moves.throw?.damage ?? 80
   if (f.radHits > 0) {
     throwDmg *= 2
     f.radHits = 0

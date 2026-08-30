@@ -429,7 +429,7 @@ describe('match sim', () => {
     expect(world.fighters[0].moveId).toBe('standLP')
     tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
     expect(world.fighters[0].status).toBe('throw')
-    expect(world.fighters[1].hp).toBe(860)
+    expect(world.fighters[1].hp).toBe(920)
   })
 
   it('LP+LK out of range does not start a punch', () => {
@@ -467,7 +467,7 @@ describe('match sim', () => {
       tickMatch(world, [p1, emptyInput()], false)
     }
     expect(world.fighters[0].status).toBe('throw')
-    expect(world.fighters[1].hp).toBe(860)
+    expect(world.fighters[1].hp).toBe(920)
   })
 
   it('throw connects at visual contact, not only pushbox range', () => {
@@ -476,7 +476,7 @@ describe('match sim', () => {
     world.fighters[1].x = world.fighters[0].x + 70
     tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
     expect(world.fighters[0].status).toBe('throw')
-    expect(world.fighters[1].hp).toBe(860)
+    expect(world.fighters[1].hp).toBe(920)
   })
 
   it('throw requires LP+LK in range on the ground', () => {
@@ -492,7 +492,7 @@ describe('match sim', () => {
     world.fighters[1].x = world.fighters[0].x + 24
     tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
     expect(world.fighters[0].status).toBe('throw')
-    expect(world.fighters[1].hp).toBe(860)
+    expect(world.fighters[1].hp).toBe(920)
   })
 
   it('refuses a throw against knockdown or an airborne foe', () => {
@@ -516,7 +516,7 @@ describe('match sim', () => {
     world.fighters[0].radHits = 1
     world.fighters[1].x = world.fighters[0].x + 24
     tickMatch(world, [hold(emptyInput(), { lp: true, lk: true }), emptyInput()], false)
-    expect(world.fighters[1].hp).toBe(720)
+    expect(world.fighters[1].hp).toBe(840)
     expect(world.fighters[0].radHits).toBe(0)
   })
 

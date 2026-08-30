@@ -247,7 +247,7 @@ export const soldier: CharDef = {
     throw: {
       id: 'throw',
       anim: 'throw',
-      damage: 140,
+      damage: 80,
       onHitStun: 20,
       onBlockStun: 0,
       hitstop: 8,
