@@ -14,20 +14,27 @@ const LOGO_CY = 108
 export function titleScene(game: Game): Scene {
   let flash = 0
   let slam = -1
+  // Swallow Start until audio has been running on this title visit.
+  // unlockAudio on keydown can mark the context running before this update.
+  let bootGate = true
   return {
     id: 'title',
     enter() {
       flash = 0
       slam = -1
       armTitleAttract()
+      bootGate = !audioReady()
     },
     exit() {
       cancelTitleAttract()
     },
     update() {
       flash += 1
-      if (game.p1.startPress || game.p1.lpPress || game.p1.punchPress) {
-        ac()
+      const start = game.p1.startPress || game.p1.lpPress || game.p1.punchPress
+      if (bootGate) {
+        if (start) ac()
+        if (audioReady()) bootGate = false
+      } else if (start) {
         sfxStart()
         game.switchTo('select')
         return

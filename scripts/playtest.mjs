@@ -77,6 +77,8 @@ async function main() {
   await waitMs(600)
   await shot(page, '01-title')
 
+  await tap(page, 'KeyW')
+  await waitMs(250)
   await tap(page, 'Enter')
   await waitMs(350)
   await shot(page, '02-select-bob')
@@ -108,6 +110,8 @@ async function main() {
 
   await page.reload({ waitUntil: 'networkidle0' })
   await waitMs(400)
+  await tap(page, 'KeyW')
+  await waitMs(250)
   await tap(page, 'Enter')
   await waitMs(250)
   await tap(page, 'KeyD')

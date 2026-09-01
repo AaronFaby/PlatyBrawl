@@ -10,7 +10,7 @@ If you are changing code, read [AGENTS.md](AGENTS.md).
 
 ## How to play
 
-1. **Title** — Click or press a key so the cabinet can speak. Zagan shouts **PLATY BRAWL!** over the attract theme. Press Enter, Space, or a punch to start.
+1. **Title** — The first click or key only starts the cabinet audio. Zagan shouts **PLATY BRAWL!** over the attract theme. After that, press Enter, Space, or a punch to start.
 2. **Select** — P1 picks a platy with A/D and locks with U (or I / J / K). **Q** cycles that portrait's color (four costumes). W/S sets CPU Normal or Hard. P2 uses **/** for color.
 3. **Stage / music** — Random is already selected. You start on the music list. **W/S** highlights a song and plays a sample (silent if music is off). **A/D** switches to the stage column. **U** locks. **J** goes back.
 4. **VS** — A short intro, then the match.
