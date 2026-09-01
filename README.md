@@ -10,7 +10,7 @@ If you are changing code, read [AGENTS.md](AGENTS.md).
 
 ## How to play
 
-1. **Title** — Press Enter, Space, or a punch to start.
+1. **Title** — Click or press a key so the cabinet can speak. Zagan shouts **PLATY BRAWL!** over the attract theme. Press Enter, Space, or a punch to start.
 2. **Select** — P1 picks a platy with A/D and locks with U (or I / J / K). **Q** cycles that portrait's color (four costumes). W/S sets CPU Normal or Hard. P2 uses **/** for color.
 3. **Stage / music** — Random is already selected. You start on the music list. **W/S** highlights a song and plays a sample (silent if music is off). **A/D** switches to the stage column. **U** locks. **J** goes back.
 4. **VS** — A short intro, then the match.
@@ -45,7 +45,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 | **Chainsaw Platy** | Grappler | **Chain Hook** `↓ ↘ → + P` · **Saw Slash** `↓ ↘ → + K` |
 | **Toxic Platy** | Hazmat | **Gas Bomb** `↓ ↘ → + P` · **Meltdown** `↓ ↙ ← + K` |
 
-Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button. Hits can flash arcade callouts — **FIRST STRIKE!**, **COUNTER!**, **REVERSAL!**, **EXCELLENT**, **PERFECT**, **DOUBLE K.O.** — and an announcer says the line at the same time.
+Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button. The announcer calls **ROUND 1**, **FIGHT**, **K.O.**, **TIME**, and **YOU WIN**, plus hit callouts — **FIRST STRIKE!**, **COUNTER!**, **REVERSAL!**, **EXCELLENT**, **PERFECT**, **DOUBLE K.O.** — when those banners flash.
 
 Motions are relative to the way you face (numpad notation):
 
@@ -67,7 +67,7 @@ After character select you pick a stage and a theme song. **Random** is the defa
 | **Tool Shed** | Chainsaw |
 | **Sludge Pit** | Toxic |
 
-Each fighter has their own 90s chip theme. You can pick any theme, or Random. The bottom-right corner shows **MUSIC: ON** or **MUSIC: OFF**. Press **M** to toggle (the browser remembers it).
+Each fighter has a 90s chip theme, and the list also includes the **title** attract theme. You can pick any of those, or Random. The bottom-right corner shows **MUSIC** and **SOUND**. Press **M** to mute music and **N** to mute hits, specials, and the announcer. The browser remembers both.
 
 ## Controls
 
@@ -95,6 +95,7 @@ Each fighter has their own 90s chip theme. You can pick any theme, or Random. Th
 | Action | Keys |
 | --- | --- |
 | Mute / unmute music | **M** (saved in the browser) |
+| Mute / unmute sound | **N** (hits, specials, announcer; saved in the browser) |
 | Pause + moveset overlay | **H** (Esc also resumes) |
 
 A standard gamepad works too. The first pad is P1. A second distinct pad is P2. Press a face button once to arm that pad (this ignores stick drift until then). Face buttons are LP / HP / LK / HK. Left bumper cycles color on select. The Start button also starts.
@@ -158,15 +159,15 @@ src/
   data/characters/   Bob, Ninja, Cyber, Soldier, Chainsaw, Toxic frame data
   data/moves.ts      overlay / select move lists
   data/stages.ts     stage roster, home stages, random pick
-  data/themes.ts     fight theme ids and names
+  data/themes.ts     title + per-fighter theme ids and names
   ai/cpu.ts          versus-CPU brain (Normal / Hard)
-  audio/             Web Audio SFX + chip BGM
+  audio/             Web Audio SFX + chip BGM + Zagan announcer
   render/            sprites, stage, HUD, camera
 public/sprites/      per-character pose PNGs
 public/stage/        billabong, dojo, neonlab, armybase, toolshed
-public/announce/     Zagan callout clips (first strike, counter, …)
+public/announce/     Zagan announcer clips (title, round, fight, K.O., callouts, …)
 scripts/process_sprites.py   chroma-key + pack generated art (`--src`, `sprite_map.json`)
-scripts/announce_tts.py      regen Zagan callout clips (`XAI_API_KEY`, speed 1.5)
+scripts/announce_tts.py      regen Zagan announcer clips (`XAI_API_KEY`, speed 1.5; `--force` overwrites)
 scripts/playtest.mjs         headless cabinet walkthrough
 AGENTS.md            notes for coding agents
 ```

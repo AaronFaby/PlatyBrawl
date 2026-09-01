@@ -1,7 +1,7 @@
 import { createCpu, resetCpu, tickCpu } from '../ai/cpu.ts'
 import { clearKeys } from '../input/devices.ts'
 import { emptyInput } from '../input/virtual.ts'
-import { sfxBlock, sfxFight, sfxGun, sfxHit, sfxJump, sfxKo, sfxSpecial, sfxWhoosh } from '../audio/sfx.ts'
+import { sfxBlock, sfxGun, sfxHit, sfxJump, sfxSpecial, sfxWhoosh } from '../audio/sfx.ts'
 import { ensureBgm } from '../audio/bgm.ts'
 import { fightTrack } from '../data/themes.ts'
 import { createMatch, tickMatch, type FightWorld } from '../fight/match.ts'
@@ -16,7 +16,6 @@ import type { Game, Scene } from './context.ts'
 export function fightScene(game: Game): Scene {
   let world: FightWorld
   let lastHp: [number, number] = [1000, 1000]
-  let lastAnnounce = ''
   let lastProj = 0
   let lastStatus: [string, string] = ['idle', 'idle']
   let paused = false
@@ -35,7 +34,6 @@ export function fightScene(game: Game): Scene {
       game.p1 = emptyInput()
       game.p2 = emptyInput()
       lastHp = [1000, 1000]
-      lastAnnounce = ''
       lastProj = 0
       lastStatus = ['idle', 'idle']
       paused = false
@@ -67,9 +65,6 @@ export function fightScene(game: Game): Scene {
       }
       if (world.fighters[0].hp < lastHp[0] || world.fighters[1].hp < lastHp[1]) sfxHit()
       lastHp = [world.fighters[0].hp, world.fighters[1].hp]
-      if (world.match.announce === 'FIGHT' && lastAnnounce !== 'FIGHT') sfxFight()
-      if (world.match.announce === 'K.O.' && lastAnnounce !== 'K.O.') sfxKo()
-      lastAnnounce = world.match.announce
       if (world.match.projectiles.length > lastProj) {
         const newest = world.match.projectiles[world.match.projectiles.length - 1]
         if (newest?.kind === 'bullet') sfxGun()

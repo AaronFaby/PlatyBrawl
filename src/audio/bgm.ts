@@ -8,7 +8,7 @@ type Voice = 'kick' | 'snare' | 'hat' | 'bass' | 'lead' | 'stab'
 type Hit = { s: number; v: Voice; n?: number; l?: number }
 
 const BPM: Record<Track, number> = {
-  title: 126,
+  title: 180,
   win: 112,
   bob: 148,
   ninja: 176,
@@ -21,7 +21,7 @@ const BPM: Record<Track, number> = {
 type Kit = 'arcade' | 'stealth' | 'techno' | 'march' | 'grind' | 'hazard'
 
 const KIT: Record<Track, Kit> = {
-  title: 'arcade',
+  title: 'grind',
   win: 'arcade',
   bob: 'arcade',
   ninja: 'stealth',
@@ -329,15 +329,7 @@ function patternArcade(track: Track): { steps: number; hits: Hit[] } {
   const D5 = 74
   const F5 = 77
   const G5 = 79
-  if (track === 'title') {
-    pushBass(hits, [D3, D3, D3, F3, G3, G3, F3, D3, Bb3, C4, D3, D3, C4, Bb3, A3, G3])
-    ;[D4, F4, A4, D5, C5, A4, G4, F4].forEach((n, i) => {
-      hits.push({ s: i * 4, v: 'lead', n, l: 3 })
-      hits.push({ s: 32 + i * 4, v: 'lead', n: n + (i % 2 === 0 ? 12 : 0), l: 2 })
-    })
-    hits.push({ s: 0, v: 'stab', n: D3 })
-    hits.push({ s: 64, v: 'stab', n: Bb3 - 12 })
-  } else if (track === 'win') {
+  if (track === 'win') {
     pushBass(hits, [D3, D3, F3, G3, A3, A3, G3, F3])
     ;[D4, F4, A4, D5, F5, A4, G4, D4].forEach((n, i) => {
       hits.push({ s: i * 4, v: 'lead', n, l: 3 })
@@ -484,7 +476,50 @@ function patternToxic(): { steps: number; hits: Hit[] } {
   return { steps, hits }
 }
 
+function patternTitle(): { steps: number; hits: Hit[] } {
+  const hits: Hit[] = []
+  const steps = 128
+  for (let b = 0; b < 8; b++) {
+    const o = b * 16
+    hits.push({ s: o, v: 'kick' })
+    hits.push({ s: o + 4, v: 'kick' })
+    hits.push({ s: o + 8, v: 'kick' })
+    hits.push({ s: o + 12, v: 'kick' })
+    if (b % 2 === 1) {
+      hits.push({ s: o + 2, v: 'kick' })
+      hits.push({ s: o + 10, v: 'kick' })
+    }
+    hits.push({ s: o + 4, v: 'snare' })
+    hits.push({ s: o + 12, v: 'snare' })
+    if (b === 3 || b === 7) hits.push({ s: o + 14, v: 'snare' })
+    for (let i = 0; i < 16; i++) hits.push({ s: o + i, v: 'hat', n: i === 14 ? 1 : 0 })
+    hits.push({ s: o, v: 'stab', n: b % 4 === 3 ? 43 : b % 2 === 1 ? 36 : 38 })
+  }
+  const chug = [38, 38, 38, 41, 38, 38, 36, 38]
+  for (let i = 0; i < 64; i++) hits.push({ s: i * 2, v: 'bass', n: chug[i % 8], l: 1 })
+  pushHook(
+    hits,
+    [
+      [62, 1], [65, 1], [67, 1], [74, 2], [69, 1], [0, 2],
+      [72, 1], [74, 1], [72, 2], [69, 4],
+      [0, 2], [65, 1], [62, 1], [60, 2], [62, 4],
+    ],
+    0,
+  )
+  pushHook(
+    hits,
+    [
+      [74, 1], [77, 1], [74, 1], [81, 2], [74, 1], [0, 2],
+      [72, 2], [69, 2], [65, 4],
+      [62, 1], [65, 1], [69, 1], [74, 1], [69, 4],
+    ],
+    64,
+  )
+  return { steps, hits }
+}
+
 function buildPattern(track: Track): { steps: number; hits: Hit[] } {
+  if (track === 'title') return patternTitle()
   if (track === 'ninja') return patternNinja()
   if (track === 'cyber') return patternCyber()
   if (track === 'soldier') return patternSoldier()
@@ -540,10 +575,11 @@ function kickOffCurrent(): void {
   const go = () => {
     kickPending = false
     if (id !== gen || current !== track) return
+    if (ac().state !== 'running') return
     scheduleLoop(track, ac().currentTime + 0.08, id)
   }
   const c = ac()
-  if (c.state === 'suspended') {
+  if (c.state !== 'running') {
     void c.resume().then(go, () => {
       kickPending = false
     })
@@ -587,10 +623,15 @@ export function ensureBgm(track: Track): void {
   startTrack(track, false)
 }
 
-/** Start the match theme once. Does not change mute. */
-export function startFightBgm(track: Track): void {
+/** Restart this track from the top. */
+export function startBgm(track: Track): void {
   ac()
   startTrack(track, true)
+}
+
+/** Start the match theme once. Does not change mute. */
+export function startFightBgm(track: Track): void {
+  startBgm(track)
 }
 
 export function trackReady(track: Track): boolean {

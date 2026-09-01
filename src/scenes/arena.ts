@@ -1,14 +1,13 @@
 import { FONT, LOGICAL_H, LOGICAL_W } from '../config.ts'
-import type { CharId } from '../config.ts'
 import { previewBgm } from '../audio/bgm.ts'
 import { ac, sfxLock, sfxSelect } from '../audio/sfx.ts'
 import { STAGE_IDS, STAGE_META, type StageId, type StagePick } from '../data/stages.ts'
-import { pickTheme, themeName } from '../data/themes.ts'
-import { ROSTER_ORDER, type Game, type Scene } from './context.ts'
+import { THEME_IDS, pickTheme, themeName, type ThemeId } from '../data/themes.ts'
+import type { Game, Scene } from './context.ts'
 import { bank, loadAllStages } from '../render/sprite.ts'
 
 const STAGE_CHOICES: StagePick[] = ['random', ...STAGE_IDS]
-const MUSIC_CHOICES: Array<CharId | 'random'> = ['random', ...ROSTER_ORDER]
+const MUSIC_CHOICES: Array<ThemeId | 'random'> = ['random', ...THEME_IDS]
 
 const THUMB_H = 36
 const THUMB_GAP = 4

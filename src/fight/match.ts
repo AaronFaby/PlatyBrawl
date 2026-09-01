@@ -1,3 +1,4 @@
+import { speakCallout } from '../audio/announce.ts'
 import { GROUND_Y, MAX_HP, ROUND_SECONDS, WINS_NEEDED } from '../config.ts'
 import { flushLandedHits, noteDoubleKo, notePerfect, resetCallouts, tickCallouts } from './callout.ts'
 import { sessionSkin } from '../data/skins.ts'
@@ -27,12 +28,14 @@ export function createMatch(session: Session): FightWorld {
     createFighter(0, session.p1, 220, 1, sessionSkin(session.p1Skin)),
     createFighter(1, session.p2, 500, -1, sessionSkin(session.p2Skin)),
   ]
-  return {
+  const world = {
     session,
     fighters,
     frame: 0,
     match: freshMatch(session),
   }
+  setAnnounce(world.match, 'ROUND 1')
+  return world
 }
 
 function freshMatch(session: Session): MatchState {
@@ -50,11 +53,17 @@ function freshMatch(session: Session): MatchState {
     callouts: [],
     firstStrike: false,
     streak: [0, 0],
-    announce: 'ROUND 1',
+    announce: '',
     winner: null,
     timeout: false,
     stageId: stageForSession(session.stageId),
   }
+}
+
+function setAnnounce(match: MatchState, text: string): void {
+  if (match.announce === text) return
+  match.announce = text
+  if (text) speakCallout(text)
 }
 
 function startRound(world: FightWorld, round: number): void {
@@ -70,7 +79,7 @@ function startRound(world: FightWorld, round: number): void {
   world.match.sparks = []
   world.match.projectiles = []
   resetCallouts(world.match)
-  world.match.announce = `ROUND ${round}`
+  setAnnounce(world.match, `ROUND ${round}`)
   world.match.timeout = false
   world.match.winner = null
   world.fighters[0].hp = MAX_HP
@@ -103,12 +112,12 @@ export function tickMatch(
 
   if (match.phase === 'intro') {
     match.phaseTicks += 1
-    if (match.phaseTicks < 70) match.announce = `ROUND ${match.round}`
-    else if (match.phaseTicks < 110) match.announce = 'FIGHT'
+    if (match.phaseTicks < 70) setAnnounce(match, `ROUND ${match.round}`)
+    else if (match.phaseTicks < 110) setAnnounce(match, 'FIGHT')
     else {
       match.phase = 'fight'
       match.phaseTicks = 0
-      match.announce = ''
+      setAnnounce(match, '')
     }
   } else if (match.phase === 'fight') {
     if (match.hitstop > 0) match.hitstop -= 1
@@ -122,7 +131,6 @@ export function tickMatch(
     if (ko0 || ko1) {
       match.phase = 'ko'
       match.phaseTicks = 0
-      match.announce = 'K.O.'
       if (ko0 && ko1) {
         match.winner = null
         noteDoubleKo(match)
@@ -130,10 +138,11 @@ export function tickMatch(
         match.winner = ko0 ? 1 : 0
         if (fighters[match.winner].hp >= MAX_HP) notePerfect(match)
       }
+      setAnnounce(match, 'K.O.')
     } else if (match.timer <= 0) {
       match.phase = 'timeout'
       match.phaseTicks = 0
-      match.announce = 'TIME'
+      setAnnounce(match, 'TIME')
       match.timeout = true
       if (fighters[0].hp === fighters[1].hp) match.winner = null
       else match.winner = fighters[0].hp > fighters[1].hp ? 0 : 1
@@ -144,7 +153,7 @@ export function tickMatch(
       match.wins[match.winner] += 1
     }
     if (match.phaseTicks > 50 && match.winner !== null) {
-      match.announce = match.wins[match.winner] >= WINS_NEEDED ? 'YOU WIN' : ''
+      setAnnounce(match, match.wins[match.winner] >= WINS_NEEDED ? 'YOU WIN' : '')
       fighters[match.winner].status = fighters[match.winner].hp > 0 ? 'win' : 'ko'
       if (fighters[match.winner].hp > 0) {
         fighters[match.winner].anim = 'win'
@@ -153,7 +162,7 @@ export function tickMatch(
     if (match.phaseTicks > 160) {
       if (match.winner !== null && match.wins[match.winner] >= WINS_NEEDED) {
         match.phase = 'over'
-        match.announce = ''
+        setAnnounce(match, '')
       } else {
         startRound(world, match.round + 1)
         return

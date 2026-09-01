@@ -1,6 +1,6 @@
 import { ac, duckMusic, env, midi, noiseBuf, sfxDest } from './engine.ts'
 
-export { ac, isMuted, toggleMute } from './engine.ts'
+export { ac, audioReady, isMuted, isSfxMuted, toggleMute, toggleSfxMute } from './engine.ts'
 
 function dest(): AudioNode {
   return sfxDest()

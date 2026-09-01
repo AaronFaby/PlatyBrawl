@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { cancelAnnounce, spokenCallouts } from '../audio/announce.ts'
 import { STAGE_IDS } from '../data/stages.ts'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
 import { createMatch, tickMatch } from './match.ts'
@@ -608,6 +609,69 @@ describe('match sim', () => {
     expect(world.match.round).toBe(2)
     expect(world.match.phase).toBe('intro')
     expect(world.match.winner).toBeNull()
+  })
+
+  it('speaks ROUND 1 then FIGHT during intro', () => {
+    cancelAnnounce()
+    const world = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    expect(world.match.announce).toBe('ROUND 1')
+    expect(spokenCallouts()).toEqual(['Round 1!'])
+    skip(world, 70)
+    expect(world.match.announce).toBe('FIGHT')
+    expect(spokenCallouts()).toEqual(['Round 1!', 'Fight!'])
+  })
+
+  it('lets PERFECT and DOUBLE K.O. keep K.O. quiet in the same frame', () => {
+    const perfect = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(perfect, 120)
+    cancelAnnounce()
+    perfect.fighters[1].hp = 0
+    tickMatch(perfect, [emptyInput(), emptyInput()], false)
+    expect(perfect.match.announce).toBe('K.O.')
+    expect(spokenCallouts()).toEqual(['Perfect!'])
+
+    const dbl = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(dbl, 120)
+    cancelAnnounce()
+    dbl.fighters[0].hp = 0
+    dbl.fighters[1].hp = 0
+    tickMatch(dbl, [emptyInput(), emptyInput()], false)
+    expect(dbl.match.announce).toBe('K.O.')
+    expect(spokenCallouts()).toEqual(['Double K.O.!'])
+  })
+
+  it('speaks K.O., TIME, Round 2, and YOU WIN on those banners', () => {
+    const ko = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(ko, 120)
+    cancelAnnounce()
+    ko.fighters[0].hp = 400
+    ko.fighters[1].hp = 0
+    tickMatch(ko, [emptyInput(), emptyInput()], false)
+    expect(spokenCallouts()).toEqual(['K.O.!'])
+
+    const time = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(time, 120)
+    cancelAnnounce()
+    time.match.timer = 0
+    tickMatch(time, [emptyInput(), emptyInput()], false)
+    expect(spokenCallouts()).toEqual(['Time!'])
+
+    const next = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(next, 120)
+    next.fighters[1].hp = 0
+    skip(next, 170)
+    expect(next.match.round).toBe(2)
+    expect(spokenCallouts()).toContain('Round 2!')
+
+    const win = createMatch({ p1: 'bob', p2: 'ninja', p2Cpu: false })
+    skip(win, 120)
+    win.match.wins[0] = 1
+    win.fighters[1].hp = 0
+    tickMatch(win, [emptyInput(), emptyInput()], false)
+    cancelAnnounce()
+    skip(win, 51)
+    expect(win.match.announce).toBe('YOU WIN')
+    expect(spokenCallouts()).toEqual(['You win!'])
   })
 
   it('armor absorbs a hit with no damage and no hitstun', () => {

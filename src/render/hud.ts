@@ -1,5 +1,5 @@
 import { CHAR_META, FONT, LOGICAL_H, LOGICAL_W, MAX_HP, WINS_NEEDED } from '../config.ts'
-import { isMuted } from '../audio/engine.ts'
+import { isMuted, isSfxMuted } from '../audio/engine.ts'
 import { MOVESET } from '../data/moves.ts'
 import { chainHandWorld } from '../fight/projectile.ts'
 import type { FightWorld } from '../fight/match.ts'
@@ -62,12 +62,15 @@ export function drawHud(ctx: CanvasRenderingContext2D, world: FightWorld, t: num
 }
 
 export function drawMusicStatus(ctx: CanvasRenderingContext2D): void {
-  const on = !isMuted()
+  const musicOn = !isMuted()
+  const soundOn = !isSfxMuted()
   ctx.save()
   ctx.textAlign = 'right'
   ctx.font = `5px ${FONT}`
-  ctx.fillStyle = on ? '#8ad4a0' : '#6a5068'
-  ctx.fillText(on ? 'MUSIC: ON' : 'MUSIC: OFF', LOGICAL_W - 6, LOGICAL_H - 6)
+  ctx.fillStyle = soundOn ? '#8ad4a0' : '#6a5068'
+  ctx.fillText(soundOn ? 'N SOUND: ON' : 'N SOUND: OFF', LOGICAL_W - 6, LOGICAL_H - 14)
+  ctx.fillStyle = musicOn ? '#8ad4a0' : '#6a5068'
+  ctx.fillText(musicOn ? 'M MUSIC: ON' : 'M MUSIC: OFF', LOGICAL_W - 6, LOGICAL_H - 6)
   ctx.restore()
 }
 

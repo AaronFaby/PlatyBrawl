@@ -1,4 +1,4 @@
-import { toggleMute } from '../audio/sfx.ts'
+import { toggleMute, toggleSfxMute } from '../audio/sfx.ts'
 import { applyTouch } from './touch.ts'
 
 const MOVE_CODES = new Set([
@@ -39,6 +39,7 @@ const GAME_CODES = new Set([
   'F2',
   'F3',
   'KeyM',
+  'KeyN',
   'KeyH',
   'KeyQ',
   'Slash',
@@ -97,7 +98,11 @@ export function createDevices(): DeviceState {
     if (GAME_CODES.has(e.code)) e.preventDefault()
     down.add(e.code)
     if (e.code === 'KeyM') {
-      toggleMute()
+      if (!e.repeat) toggleMute()
+      return
+    }
+    if (e.code === 'KeyN') {
+      if (!e.repeat) toggleSfxMute()
       return
     }
     if (e.code === 'F1') devices.debugHitboxes = !devices.debugHitboxes

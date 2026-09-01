@@ -18,7 +18,7 @@ npm run build     # tsc && vite build
 npm run preview
 npm run playtest  # puppeteer screenshots; start `npm run dev` first
 npm run sprites -- --src /path/to/images   # chroma-key and pack poses
-python3 scripts/announce_tts.py            # regen Zagan callout clips (needs XAI_API_KEY)
+python3 scripts/announce_tts.py            # regen Zagan announcer clips (needs XAI_API_KEY; skip existing unless --force)
 npm run deploy    # build, then wrangler deploy
 ```
 
@@ -36,22 +36,22 @@ src/input/           keyboard + pads, motion / charge buffer
 src/data/characters/ per-fighter frame data and specials
 src/data/moves.ts    select lines + pause overlay text
 src/data/roster.ts   getChar, pickCpuOpponent
-src/data/themes.ts   fight theme ids + names
+src/data/themes.ts   THEME_IDS (title + CHAR_IDS) and names
 src/ai/cpu.ts        CPU brain (normal / hard)
 src/render/          sprites, stage, HUD, camera, fallback stick figures
-src/audio/           Web Audio SFX + chip BGM (title, win, one track per CharId) + Zagan callout clips
+src/audio/           Web Audio SFX + chip BGM (fast grind title attract, win, one track per CharId) + Zagan announcer clips
 public/sprites/<id>/ pose PNGs
 public/stage/        one home stage per fighter (960×540 jpg)
-public/announce/     first-strike, counter, reversal, excellent, perfect, double-ko mp3s
+public/announce/     callout + round/fight/ko/time/you-win + platy-brawl attract mp3s
 ```
 
 **Sim versus view.** `startLoop` runs `step()` at 60 Hz and draws every animation frame. Match logic, hitboxes, and CPU plans belong in the sim. Drawing reads fighter state; it must not write gameplay state.
 
-**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty?, stageId?, bgmId?, p1Skin?, p2Skin? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session, including stage, music, and color skins. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`. `p1Skin` / `p2Skin` are 0–3; a missing value is costume 0. `stageId` may be `'random'` or a `StageId`. Random (or a missing value) picks one stage in `createMatch` and keeps it for every round of that match. Rematch with Random may pick a different stage. `bgmId` is a `CharId`; a missing value uses P1's theme. Preview and fight BGM must respect mute (`isMuted()` / the music bus). Do not call `setMuted(false)` to start a match. Start the fight theme in versus; fight enter should `ensureBgm` only so the track is not restarted.
+**Session.** `Game.session` (`src/fight/types.ts`) is `{ p1, p2, p2Cpu, cpuDifficulty?, stageId?, bgmId?, p1Skin?, p2Skin? }`. Default is Bob versus CPU Ninja on Normal (`DEFAULT_SESSION` in `src/scenes/context.ts`). Rematch reuses the session, including stage, music, and color skins. `cpuDifficulty` is optional so older `createMatch({ p1, p2, p2Cpu })` tests stay valid; treat a missing value as `'normal'`. `p1Skin` / `p2Skin` are 0–3; a missing value is costume 0. `stageId` may be `'random'` or a `StageId`. Random (or a missing value) picks one stage in `createMatch` and keeps it for every round of that match. Rematch with Random may pick a different stage. `bgmId` is a `ThemeId` (`CharId` or `'title'`); a missing value uses P1's theme. Preview and fight BGM must respect mute (`isMuted()` / the music bus). Hits, specials, and Zagan clips use the SFX bus (`isSfxMuted()`). **M** toggles music and **N** toggles sound; both persist in localStorage. Do not call `setMuted(false)` or `setSfxMuted(false)` to start a match. Start the fight theme in versus; fight enter should `ensureBgm` only so the track is not restarted.
 
 **Roster IDs.** `CHAR_IDS` in `src/config.ts` is the source of the `CharId` union. `ROSTER_ORDER` in `src/scenes/context.ts` is `CHAR_IDS`. Select wrap uses `ROSTER_ORDER.length`, not a hardcoded three.
 
-**Scenes.** Each scene is `{ id, enter, exit, update, draw }`. `game.switchTo(id)` exits the current scene and enters the next. Select goes to **arena** (stage + music). Arena defaults both cursors to Random and starts on the music column. Highlighting a music row calls `previewBgm` (respects mute). Versus calls `startFightBgm` once. Fight enter calls `ensureBgm` only so the track is not restarted. `drawMusicStatus` in `src/render/hud.ts` is painted from `main.ts` after every scene. Fight creates a new `FightWorld` on enter. Result receives `{ winner, world }`.
+**Scenes.** Each scene is `{ id, enter, exit, update, draw }`. `game.switchTo(id)` exits the current scene and enters the next. Title attract: browsers block sound until a click or key. `unlockAudio` retries on every gesture (not once). After the context is running, title `ensureBgm('title')` and `speakTitle()`. Do not create/schedule audio from title enter before that. Leaving title (`cancelTitleAttract`) drops a pending shout so select does not replay it. **M** mutes the music bus instantly; **N** mutes the SFX bus (hits, announcer) instantly. Title BGM is a unique 180 BPM grind loop, not Bob's arcade hook. Select goes to **arena** (stage + music). Arena defaults both cursors to Random and starts on the music column. Highlighting a music row calls `previewBgm` (respects mute). Versus calls `startFightBgm` once. Fight enter calls `ensureBgm` only so the track is not restarted. `drawMusicStatus` in `src/render/hud.ts` is painted from `main.ts` after every scene. Fight creates a new `FightWorld` on enter. Result receives `{ winner, world }`.
 
 ## Add a character
 
@@ -65,7 +65,7 @@ Touch every layer. A missing one compiles in isolation and fails in play.
 6. **CPU** — Add the id to `ANTI_AIR`, `LONG_FIRE`, and `LONG_PLAN` in `src/ai/cpu.ts`. Teach only motions that fighter defines. Bob anti-airs with QCF+K (Venom Spur), not a DP. Charge specials must be one plan (hold back for `CHARGE_FRAMES +` a few ticks, then forward + button) so cooldown cannot dump the charge.
 7. **Fallback draw** — `src/render/platy.ts` still draws if a sprite is missing. Add a `PALETTE` row and an `EXTRAS` drawer for the new id. Add four `{ hue, sat, light }` costume rows in `src/data/skins.ts`. Select **Q** (P1) / **/** (P2) recolors the highlighted portrait only; no extra swatch UI. If both cursors share a card, the portrait is split P1 | P2. Portrait tints must keep the purple select backdrop (`portraitBackdropMask`).
 8. **Home stage** — New file `public/stage/<id>.jpg` at 960×540. Add the id to `STAGE_IDS` and `STAGE_META` in `src/data/stages.ts`, map it in `CHAR_STAGE`, and add a ground palette in `src/render/stage.ts`. Arena lists `STAGE_IDS` automatically.
-9. **Theme song** — Add a unique 90s-chip fight track keyed by the new `CharId` in `src/audio/bgm.ts` (`BPM`, `KIT`, and a `pattern*` groove). Do not reuse Bob's arcade hook. Title and win stay shared. Arena lists `ROSTER_ORDER` as themes automatically.
+9. **Theme song** — Add a unique 90s-chip fight track keyed by the new `CharId` in `src/audio/bgm.ts` (`BPM`, `KIT`, and a `pattern*` groove). Do not reuse Bob's arcade hook. Title and win stay shared. Arena lists `THEME_IDS` (`title` plus `CHAR_IDS`) automatically.
 10. **Tests** — At least one sim test for a signature special, plus roster coverage. `pickCpuOpponent` must never return P1's id. `CHAR_STAGE` must include the new id.
 
 Select and title iterate `ROSTER_ORDER` / `CHAR_IDS`. Sprite load iterates `CHAR_IDS` and `POSES`. Stage load iterates `STAGE_IDS`. You do not hand-edit the sprite bank object.
@@ -96,7 +96,7 @@ World offset of sprite pixel `(px, py)` is `((px - 80) * scale, (py - 156) * sca
 - Projectile kinds today: `shuriken` (ninja), `beam` (cyber plasma), `bullet` (soldier pistol), `chain` (chainsaw hook; on hit reels the defender in over several frames), `gas` (toxic bomb; unblocked hit applies poison DoT). Spawn points are sprite-space muzzles on the firing pose, converted with `spriteDrawScale`.
 - Anim flags can also set `invuln`, `invulnHead`, `armorHits`, `teleport`, `radBuff` (Toxic Meltdown: next unblocked damaging hit deals 2×).
 - Poison and Meltdown charges live on the fighter (`poisonLeft` / `radHits`) and clear on `resetFighter`.
-- Arcade callouts live on `MatchState.callouts` (`src/fight/callout.ts`). **FIRST STRIKE!** is the first unblocked damaging hit or throw of the round. **COUNTER!** is a hit during the opponent's attack/special/throw. **REVERSAL!** is a hit from a move started in the wakeup/land window (`REVERSAL_WINDOW`). Projectile hits use the `reversal` flag stamped at spawn, not the owner's current move. **EXCELLENT** is four unanswered unblocked hits. Strike and projectile hits from one frame are flushed together, so a trade resets both streaks and cannot award EXCELLENT. **PERFECT** is a KO while the winner is at full HP. **DOUBLE K.O.** is both at 0. Poison DoT and blocked/armor hits do not count. `startRound` resets the streak and first-strike flag. `pushCallout` speaks the line even when it only refreshes a live pop-up (`src/audio/announce.ts` plays Zagan MP3s on the SFX bus). Lower-priority lines in the same simulation frame stay quiet; the next frame can speak. `unlockAnnounce` preloads the clips on the first user gesture. Regen clips with `python3 scripts/announce_tts.py` (Zagan, speed 1.5).
+- Arcade callouts live on `MatchState.callouts` (`src/fight/callout.ts`). **FIRST STRIKE!** is the first unblocked damaging hit or throw of the round. **COUNTER!** is a hit during the opponent's attack/special/throw. **REVERSAL!** is a hit from a move started in the wakeup/land window (`REVERSAL_WINDOW`). Projectile hits use the `reversal` flag stamped at spawn, not the owner's current move. **EXCELLENT** is four unanswered unblocked hits. Strike and projectile hits from one frame are flushed together, so a trade resets both streaks and cannot award EXCELLENT. **PERFECT** is a KO while the winner is at full HP. **DOUBLE K.O.** is both at 0. Poison DoT and blocked/armor hits do not count. `startRound` resets the streak and first-strike flag. `pushCallout` speaks the line even when it only refreshes a live pop-up (`src/audio/announce.ts` plays Zagan MP3s on the SFX bus). Round banners (`ROUND 1`–`3`, extra rounds use `round.mp3`, `FIGHT`, `K.O.`, `TIME`, `YOU WIN`) speak once when `setAnnounce` changes the HUD string. **PERFECT** and **DOUBLE K.O.** beat **K.O.** in the same frame. Lower-priority lines in the same simulation frame stay quiet; the next frame can speak. `unlockAnnounce` preloads the clips on the first user gesture. Regen clips with `python3 scripts/announce_tts.py` (Zagan, speed 1.5; existing files skipped unless `--force`).
 
 If you rename a move, update the character file, `moves.ts`, the special `pose` field, and any CPU plan that hardcodes that motion. `poseForAnim` reads specials off `CharDef`.
 

@@ -1,4 +1,4 @@
-import { ac, duckMusic, sfxDest } from './engine.ts'
+import { ac, audioReady, duckMusic, sfxDest } from './engine.ts'
 
 const LINE: Record<string, string> = {
   'FIRST STRIKE!': 'First strike!',
@@ -7,6 +7,15 @@ const LINE: Record<string, string> = {
   EXCELLENT: 'Excellent!',
   PERFECT: 'Perfect!',
   'DOUBLE K.O.': 'Double K.O.!',
+  'ROUND 1': 'Round 1!',
+  'ROUND 2': 'Round 2!',
+  'ROUND 3': 'Round 3!',
+  ROUND: 'Round!',
+  FIGHT: 'Fight!',
+  'K.O.': 'K.O.!',
+  TIME: 'Time!',
+  'YOU WIN': 'You win!',
+  'PLATY BRAWL!': 'Platy Brawl!',
 }
 
 const CLIP: Record<string, string> = {
@@ -16,16 +25,35 @@ const CLIP: Record<string, string> = {
   EXCELLENT: '/announce/excellent.mp3',
   PERFECT: '/announce/perfect.mp3',
   'DOUBLE K.O.': '/announce/double-ko.mp3',
+  'ROUND 1': '/announce/round-1.mp3',
+  'ROUND 2': '/announce/round-2.mp3',
+  'ROUND 3': '/announce/round-3.mp3',
+  ROUND: '/announce/round.mp3',
+  FIGHT: '/announce/fight.mp3',
+  'K.O.': '/announce/ko.mp3',
+  TIME: '/announce/time.mp3',
+  'YOU WIN': '/announce/you-win.mp3',
+  'PLATY BRAWL!': '/announce/platy-brawl.mp3',
 }
 
 const PRIORITY: Record<string, number> = {
+  'YOU WIN': 8,
+  FIGHT: 7,
+  TIME: 7,
+  ROUND: 7,
+  'ROUND 1': 7,
+  'ROUND 2': 7,
+  'ROUND 3': 7,
   'DOUBLE K.O.': 6,
   PERFECT: 5,
   'FIRST STRIKE!': 4,
+  'K.O.': 4,
   'REVERSAL!': 3,
   'COUNTER!': 2,
   EXCELLENT: 1,
 }
+
+const ROUND_LINE = /^ROUND (\d+)$/
 
 const CLIP_GAIN = 0.9
 
@@ -36,6 +64,35 @@ let spokenPriority = -1
 let current: AudioBufferSourceNode | null = null
 let loading: Promise<void> | null = null
 let pending: string | null = null
+let pendingGain = CLIP_GAIN
+let titleAttract = true
+let titlePlayed = false
+
+function roundClip(text: string): string | undefined {
+  const m = ROUND_LINE.exec(text)
+  if (!m) return undefined
+  const n = Number(m[1])
+  if (n >= 1 && n <= 3) return `ROUND ${n}`
+  return 'ROUND'
+}
+
+function clipKey(text: string): string | undefined {
+  if (CLIP[text]) return text
+  return roundClip(text)
+}
+
+function spokenLine(text: string): string {
+  if (LINE[text]) return LINE[text]
+  const m = ROUND_LINE.exec(text)
+  if (m) return `Round ${m[1]}!`
+  return text.replace(/!/g, '')
+}
+
+function priorityOf(text: string): number {
+  if (PRIORITY[text] != null) return PRIORITY[text]
+  if (ROUND_LINE.test(text)) return PRIORITY.ROUND
+  return 0
+}
 
 function inPage(): boolean {
   return typeof window !== 'undefined' && typeof document !== 'undefined'
@@ -43,6 +100,23 @@ function inPage(): boolean {
 
 function hasWebAudio(): boolean {
   return typeof AudioContext !== 'undefined'
+}
+
+function audioRunning(): boolean {
+  return hasWebAudio() && audioReady()
+}
+
+function flushPending(): void {
+  if (!pending) return
+  if (pending === 'PLATY BRAWL!' && (!titleAttract || titlePlayed)) {
+    pending = null
+    return
+  }
+  if (!audioRunning()) return
+  const text = pending
+  const gain = pendingGain
+  pending = null
+  play(text, gain)
 }
 
 function stopCurrent(): void {
@@ -67,11 +141,7 @@ async function loadClips(): Promise<void> {
       buffers.set(text, await ctx.decodeAudioData(raw.slice(0)))
     }),
   )
-  if (pending && buffers.has(pending)) {
-    const text = pending
-    pending = null
-    play(text)
-  }
+  flushPending()
 }
 
 function ensureClips(): Promise<void> {
@@ -84,21 +154,26 @@ function ensureClips(): Promise<void> {
   return loading
 }
 
-function play(text: string): void {
-  const buf = buffers.get(text)
-  if (!buf) {
+function play(text: string, gain = CLIP_GAIN): void {
+  const key = clipKey(text)
+  const buf = key ? buffers.get(key) : undefined
+  if (!key || !buf || !audioRunning()) {
     pending = text
+    pendingGain = gain
     void ensureClips()
     return
   }
   pending = null
-  if (!hasWebAudio()) return
+  if (text === 'PLATY BRAWL!') {
+    titlePlayed = true
+    spoken.push('Platy Brawl!')
+  }
   stopCurrent()
   const ctx = ac()
   const src = ctx.createBufferSource()
   src.buffer = buf
   const g = ctx.createGain()
-  g.gain.value = CLIP_GAIN
+  g.gain.value = gain
   src.connect(g)
   g.connect(sfxDest())
   duckMusic(Math.max(0.7, buf.duration + 0.08))
@@ -115,7 +190,7 @@ export function spokenCallouts(): readonly string[] {
 
 export function unlockAnnounce(): void {
   if (!inPage() || !hasWebAudio()) return
-  void ensureClips()
+  void ensureClips().then(() => flushPending())
 }
 
 export function beginAnnounceFrame(): void {
@@ -130,11 +205,30 @@ export function cancelAnnounce(): void {
 }
 
 export function speakCallout(text: string): void {
-  const line = LINE[text] ?? text.replace(/!/g, '')
-  const pri = PRIORITY[text] ?? 0
+  const pri = priorityOf(text)
   if (pri < spokenPriority) return
   spokenPriority = pri
-  spoken.push(line)
-  if (!CLIP[text] || !inPage() || !hasWebAudio()) return
+  spoken.push(spokenLine(text))
+  if (!clipKey(text) || !inPage() || !hasWebAudio()) return
   play(text)
+}
+
+export function armTitleAttract(): void {
+  titleAttract = true
+  titlePlayed = false
+}
+
+export function cancelTitleAttract(): void {
+  titleAttract = false
+  if (pending === 'PLATY BRAWL!') pending = null
+}
+
+export function speakTitle(): void {
+  if (!titleAttract || titlePlayed || pending === 'PLATY BRAWL!') return
+  if (!inPage() || !hasWebAudio()) {
+    titlePlayed = true
+    spoken.push('Platy Brawl!')
+    return
+  }
+  play('PLATY BRAWL!', 1)
 }

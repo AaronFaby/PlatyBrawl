@@ -7,14 +7,27 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let sfxBus: GainNode | null = null
 let musicBus: GainNode | null = null
-let muted = loadMuted()
+let muted = loadFlag('platybrawlMusic')
+let sfxMuted = loadFlag('platybrawlSfx')
 
-function loadMuted(): boolean {
+function loadFlag(key: string): boolean {
   try {
-    return localStorage.getItem('platybrawlMusic') === 'off'
+    return localStorage.getItem(key) === 'off'
   } catch {
     return false
   }
+}
+
+function storeFlag(key: string, off: boolean): void {
+  try {
+    localStorage.setItem(key, off ? 'off' : 'on')
+  } catch {
+    // Storage can be unavailable in private contexts; muting should still work.
+  }
+}
+
+export function audioReady(): boolean {
+  return !!ctx && ctx.state === 'running'
 }
 
 export function ac(): AudioContext {
@@ -24,7 +37,7 @@ export function ac(): AudioContext {
     master.gain.value = MASTER_GAIN
     master.connect(ctx.destination)
     sfxBus = ctx.createGain()
-    sfxBus.gain.value = SFX_GAIN
+    sfxBus.gain.value = sfxMuted ? 0 : SFX_GAIN
     sfxBus.connect(master)
     musicBus = ctx.createGain()
     musicBus.gain.value = muted ? 0 : MUSIC_GAIN
@@ -48,20 +61,32 @@ export function isMuted(): boolean {
   return muted
 }
 
+export function isSfxMuted(): boolean {
+  return sfxMuted
+}
+
 export function applyMusicGain(): void {
   if (!musicBus || !ctx) return
   musicBus.gain.cancelScheduledValues(ctx.currentTime)
-  musicBus.gain.setTargetAtTime(muted ? 0 : MUSIC_GAIN, ctx.currentTime, 0.04)
+  musicBus.gain.setValueAtTime(muted ? 0 : MUSIC_GAIN, ctx.currentTime)
+}
+
+export function applySfxGain(): void {
+  if (!sfxBus || !ctx) return
+  sfxBus.gain.cancelScheduledValues(ctx.currentTime)
+  sfxBus.gain.setValueAtTime(sfxMuted ? 0 : SFX_GAIN, ctx.currentTime)
 }
 
 export function setMuted(on: boolean): void {
   muted = on
-  try {
-    localStorage.setItem('platybrawlMusic', on ? 'off' : 'on')
-  } catch {
-    // Storage can be unavailable in private contexts; muting should still work.
-  }
+  storeFlag('platybrawlMusic', on)
   applyMusicGain()
+}
+
+export function setSfxMuted(on: boolean): void {
+  sfxMuted = on
+  storeFlag('platybrawlSfx', on)
+  applySfxGain()
 }
 
 export function toggleMute(): boolean {
@@ -69,12 +94,17 @@ export function toggleMute(): boolean {
   return muted
 }
 
+export function toggleSfxMute(): boolean {
+  setSfxMuted(!sfxMuted)
+  return sfxMuted
+}
+
 export function duckMusic(seconds = 0.35): void {
-  if (!musicBus || !ctx || muted) return
+  if (!musicBus || !ctx || muted || sfxMuted) return
   const t = ctx.currentTime
   musicBus.gain.cancelScheduledValues(t)
   musicBus.gain.setValueAtTime(MUSIC_DUCK, t)
-  musicBus.gain.linearRampToValueAtTime(MUSIC_GAIN, t + seconds)
+  musicBus.gain.linearRampToValueAtTime(muted ? 0 : MUSIC_GAIN, t + seconds)
 }
 
 export function env(g: GainNode, t: number, peak: number, a: number, r: number): void {

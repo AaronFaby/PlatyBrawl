@@ -17,7 +17,6 @@ import { fightScene } from './scenes/fight.ts'
 import { resultScene } from './scenes/result.ts'
 import { ac } from './audio/sfx.ts'
 import { unlockAnnounce } from './audio/announce.ts'
-import { ensureBgm } from './audio/bgm.ts'
 import { bank, loadSprites } from './render/sprite.ts'
 import { drawMusicStatus } from './render/hud.ts'
 
@@ -61,13 +60,18 @@ function switchTo(id: SceneId, data?: unknown): void {
   scene.enter(data)
 }
 
-const bootAudio = () => {
-  ac()
-  unlockAnnounce()
-  ensureBgm('title')
+const unlockAudio = () => {
+  const ctx = ac()
+  const go = () => {
+    if (ctx.state !== 'running') return
+    unlockAnnounce()
+  }
+  if (ctx.state === 'running') go()
+  else void ctx.resume().then(go)
 }
-window.addEventListener('pointerdown', bootAudio, { once: true })
-window.addEventListener('keydown', bootAudio, { once: true })
+window.addEventListener('pointerdown', unlockAudio)
+window.addEventListener('click', unlockAudio)
+window.addEventListener('keydown', unlockAudio)
 
 const pauseLatch = { p1: emptyInput(), p2: emptyInput() }
 
