@@ -1,4 +1,4 @@
-import { GROUND_Y, STAGE_PAD, STAGE_W } from '../config.ts'
+import { GROUND_Y, LOGICAL_W, STAGE_PAD, STAGE_W } from '../config.ts'
 import { worldBox } from './boxes.ts'
 import { currentFrame, grounded } from './fighter.ts'
 import type { Fighter } from './types.ts'
@@ -39,4 +39,20 @@ export function resolvePush(a: Fighter, b: Fighter): void {
   }
   clampStage(a)
   clampStage(b)
+}
+
+/** Stop outward movement at the screen span without dragging a stationary opponent. */
+export function clampSeparation(a: Fighter, b: Fighter, prevX: [number, number]): void {
+  const left = a.x <= b.x ? a : b
+  const right = left === a ? b : a
+  const excess = right.x - left.x - (LOGICAL_W - 2 * STAGE_PAD)
+  if (excess <= 0) return
+  const leftOut = Math.max(0, prevX[left.id] - left.x)
+  const rightOut = Math.max(0, right.x - prevX[right.id])
+  const total = leftOut + rightOut
+  const leftShare = total > 0 ? leftOut / total : 0.5
+  left.x += excess * leftShare
+  right.x -= excess * (1 - leftShare)
+  if (left.vx < 0) left.vx = 0
+  if (right.vx > 0) right.vx = 0
 }

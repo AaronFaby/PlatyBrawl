@@ -21,6 +21,8 @@ Default mode is **versus CPU** on **Normal**. After P1 locks, the CPU is assigne
 
 To play **human versus human**, press a P2 attack (**O**, **P**, **L**, **;**, or numpad 4/5/1/2) *before* P1 locks. That first press only sits P2 down. Then P2 picks with the arrow keys, **/** for color, and locks with **O**.
 
+Returning to **Title** restores versus CPU. **Rematch** keeps both players and the selected settings.
+
 During a match, press **H** to pause and show both characters' movesets. **H** or **Esc** resumes.
 
 ## CPU difficulty

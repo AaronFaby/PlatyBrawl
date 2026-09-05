@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cancelAnnounce, spokenCallouts } from '../audio/announce.ts'
 import { STAGE_IDS } from '../data/stages.ts'
+import { currentFrame } from './fighter.ts'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
 import { createMatch, tickMatch } from './match.ts'
 
@@ -31,6 +32,79 @@ function hold(prev: VirtualInput, partial: Partial<VirtualInput>): VirtualInput 
 function skip(world: ReturnType<typeof createMatch>, n: number, p1 = emptyInput(), p2 = emptyInput()): void {
   for (let i = 0; i < n; i++) tickMatch(world, [p1, p2], false)
 }
+
+describe('review regressions', () => {
+  it.each([0, 1] as const)('lets player %i jump out of repeated corner throws after wakeup', (victimId) => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    const attackerId = victimId === 0 ? 1 : 0
+    const victim = world.fighters[victimId]
+    world.fighters[0].x = victimId === 0 ? 36 : 650
+    world.fighters[1].x = victimId === 0 ? 70 : 684
+    const inputs: [VirtualInput, VirtualInput] = [emptyInput(), emptyInput()]
+    inputs[attackerId] = hold(emptyInput(), { lp: true, lk: true })
+    tickMatch(world, inputs, false)
+    expect(victim.hp).toBe(920)
+    inputs[attackerId] = hold(inputs[attackerId], { lp: true, lk: true })
+    inputs[victimId] = tap({ dir: 8 })
+    const states = new Set([victim.status])
+    for (let i = 0; i < 80 && victim.status !== 'jump'; i++) {
+      tickMatch(world, inputs, false)
+      states.add(victim.status)
+    }
+    expect(states).toContain('knockdown')
+    expect(states).toContain('wakeup')
+    expect(victim.status).toBe('jump')
+    expect(victim.hp).toBe(920)
+    expect(victim.pendingKd).toBe(false)
+    expect(victim.stun).toBe(0)
+  })
+
+  it.each([0, 1] as const)('locks player %i throws when the timer expires', (attackerId) => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    const winner = attackerId === 0 ? 1 : 0
+    world.fighters[0].x = 300
+    world.fighters[1].x = 370
+    world.fighters[attackerId].hp = 60
+    world.fighters[winner].hp = 70
+    world.match.timer = 1
+    world.match.timerAcc = 59
+    const inputs: [VirtualInput, VirtualInput] = [emptyInput(), emptyInput()]
+    inputs[attackerId] = hold(emptyInput(), { lp: true, lk: true })
+    tickMatch(world, inputs, false)
+    expect(world.match.phase).toBe('timeout')
+    expect(world.match.winner).toBe(winner)
+    expect(world.fighters[winner].hp).toBe(70)
+    expect(world.fighters[attackerId].status).not.toBe('throw')
+    skip(world, 51)
+    expect(world.match.wins[winner]).toBe(1)
+    expect(world.fighters[winner].status).toBe('win')
+  })
+
+  it.each(['L', 'H'])('keeps Rocket Knee %s moving through its active frames', (strength) => {
+    const world = createMatch({ p1: 'cyber', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    let input = emptyInput()
+    for (const dir of [2, 3, 6]) {
+      input = hold(input, { dir, lk: dir === 6 && strength === 'L', hk: dir === 6 && strength === 'H' })
+      tickMatch(world, [input, emptyInput()], false)
+    }
+    const cyber = world.fighters[0]
+    expect(cyber.moveId).toBe(`rocketKnee${strength}`)
+    const x = cyber.x
+    let activeTicks = 0
+    for (let i = 0; i < 45; i++) {
+      tickMatch(world, [emptyInput(), emptyInput()], false)
+      if (currentFrame(cyber).hit && cyber.frameTicks > 0) {
+        expect(cyber.vx).toBeGreaterThan(3)
+        activeTicks += 1
+      }
+    }
+    expect(activeTicks).toBeGreaterThan(8)
+    expect(cyber.x - x).toBeGreaterThan(80)
+  })
+})
 
 describe('match sim', () => {
   it('neither fighter walks during intro or the first idle second', () => {
