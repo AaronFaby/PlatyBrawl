@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { emptyStick, p2WantsJoin, readP1, readP2, type DeviceState } from './devices.ts'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createBuffer, matchMotion, pushDir } from './buffer.ts'
+import { emptyInput, stickToVirtual } from './virtual.ts'
+import { emptyStick, p2WantsJoin, readP1, readP2, refreshPads, type DeviceState } from './devices.ts'
+
+afterEach(() => vi.unstubAllGlobals())
 
 function fakePad(axes: number[], dpadRight = false, face = false): Gamepad {
   const buttons = Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 }))
@@ -72,12 +76,12 @@ describe('unarmed pads', () => {
     expect(p1.left || p1.right || p1.up || p1.down).toBe(false)
   })
 
-  it('does not let a pad type fake WASD or arrows', () => {
+  it('keeps keyboard movement available while an unarmed pad drifts', () => {
     const d = mockDevices(['KeyD', 'ArrowRight'], [fakePad([0.99, 0], true), null])
     const p1 = readP1(d)
     const p2 = readP2(d)
-    expect(p1.left || p1.right || p1.up || p1.down).toBe(false)
-    expect(p2.left || p2.right || p2.up || p2.down).toBe(false)
+    expect(p1.right).toBe(true)
+    expect(p2.right).toBe(true)
   })
 
   it('WASD still moves P1 when no pad is talking', () => {
@@ -98,6 +102,45 @@ describe('unarmed pads', () => {
     const d = mockDevices(['KeyD'], [fakePad([0, 0]), null])
     d.padArmed[0] = true
     expect(readP1(d).right).toBe(true)
+  })
+})
+
+describe('mixed keyboard and controller input', () => {
+  it.each([0, 1] as const)('preserves both keyboards while pad %i attacks', (slot) => {
+    const pads: DeviceState['pads'] = [fakePad([0, 0], false, slot === 0), fakePad([0, 0], false, slot === 1)]
+    pads[1] = { ...pads[1]!, index: 1 }
+    const d = mockDevices(['KeyA', 'ArrowRight'], pads)
+    vi.stubGlobal('navigator', { getGamepads: () => pads })
+    refreshPads(d)
+    expect(d.down).toEqual(new Set(['KeyA', 'ArrowRight']))
+    expect(readP1(d).left).toBe(true)
+    expect(readP2(d).right).toBe(true)
+    expect((slot === 0 ? readP1(d) : readP2(d)).lp).toBe(true)
+  })
+})
+
+describe('analog directions', () => {
+  it.each([
+    [-0.8, -0.9, 7], [0.9, -0.8, 9], [-0.9, 0.8, 1], [0.8, 0.9, 3],
+  ])('preserves diagonal axes %i, %i as direction %i', (x, y, dir) => {
+    const d = mockDevices([], [fakePad([x, y]), null])
+    d.padArmed[0] = true
+    expect(stickToVirtual(readP1(d), emptyInput()).dir).toBe(dir)
+  })
+
+  it.each([1, -1] as const)('recognizes analog QCF and QCB facing %i', (facing) => {
+    for (const motion of ['qcf', 'qcb'] as const) {
+      const side = facing * (motion === 'qcf' ? 1 : -1)
+      const buf = createBuffer()
+      const d = mockDevices([])
+      d.padArmed[0] = true
+      const axes = [[0, 1], [side * 0.7, 0.7], [side, 0]]
+      axes.forEach((xy, frame) => {
+        d.pads[0] = fakePad(xy)
+        pushDir(buf, stickToVirtual(readP1(d), emptyInput()).dir, frame, facing)
+      })
+      expect(matchMotion(buf, motion, 2, facing)).toBe(true)
+    }
   })
 })
 

@@ -13,7 +13,7 @@ import {
   resetFighter,
   tickFighter,
 } from './fighter.ts'
-import { clampStage, resolvePush } from './physics.ts'
+import { clampSeparation, clampStage, resolvePush } from './physics.ts'
 import type { Fighter, MatchState, PlayerId, ProjectileKind, Session } from './types.ts'
 
 export type FightWorld = {
@@ -100,7 +100,6 @@ export function tickMatch(
 
   if (dummyBlock) inputs[1] = dummyBlockInput(fighters[1], fighters[0])
 
-  const locked = match.phase !== 'fight'
   const hooksFor = (id: PlayerId) => ({
     frame: world.frame,
     other: fighters[id === 0 ? 1 : 0],
@@ -170,6 +169,8 @@ export function tickMatch(
     }
   }
 
+  const locked = match.phase !== 'fight'
+  const prevX: [number, number] = [fighters[0].x, fighters[1].x]
   faceOpponent(fighters[0], fighters[1])
   faceOpponent(fighters[1], fighters[0])
 
@@ -178,6 +179,7 @@ export function tickMatch(
   clampStage(fighters[0])
   clampStage(fighters[1])
   resolvePush(fighters[0], fighters[1])
+  clampSeparation(fighters[0], fighters[1], prevX)
   for (const p of match.projectiles) {
     if (p.tether == null) continue
     const hooked = fighters[p.tether]

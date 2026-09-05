@@ -176,7 +176,14 @@ function onAnimEnd(f: Fighter): void {
     f.wakeupInvuln = WAKEUP_INVULN
     return
   }
-  if (f.status === 'wakeup' || f.status === 'land' || f.status === 'throw' || f.status === 'thrown') {
+  if (f.status === 'thrown') {
+    f.pendingKd = false
+    f.stun = 0
+    f.vx = 0
+    setAnim(f, 'knockdown', 'knockdown')
+    return
+  }
+  if (f.status === 'wakeup' || f.status === 'land' || f.status === 'throw') {
     if (f.status === 'wakeup' || f.status === 'land') f.reversalLeft = REVERSAL_WINDOW
     setAnim(f, 'idle', 'idle')
     f.moveId = null
@@ -272,6 +279,7 @@ function canThrowNow(f: Fighter): boolean {
 
 function tryThrow(f: Fighter, other: Fighter, match: MatchState): boolean {
   if (!grounded(f) || !grounded(other)) return false
+  if (other.wakeupInvuln > 0) return false
   if (Math.abs(other.x - f.x) > THROW_RANGE) return false
   if (other.status === 'knockdown' || other.status === 'wakeup' || other.status === 'ko' || other.status === 'thrown') {
     return false
@@ -408,7 +416,7 @@ function applyLand(f: Fighter): void {
     f.vx *= 0.4
     return
   }
-  if (f.status === 'special' && (f.moveId?.startsWith('venom') || f.moveId?.startsWith('rocket'))) {
+  if (f.status === 'special' && f.moveId?.startsWith('venom')) {
     // specials finish their recovery on the ground
     f.vx = 0
     return
@@ -465,7 +473,7 @@ export function faceOpponent(f: Fighter, other: Fighter): void {
 
 export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, locked: boolean): void {
   if (f.flash > 0) f.flash -= 1
-  if (f.wakeupInvuln > 0) f.wakeupInvuln -= 1
+  if (f.wakeupInvuln > 0 && f.status !== 'wakeup') f.wakeupInvuln -= 1
   if (input.lpPress) f.lpTap = hooks.frame
   if (input.lkPress) f.lkTap = hooks.frame
   pushDir(f.buffer, input.dir, hooks.frame, f.facing)

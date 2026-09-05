@@ -1,17 +1,6 @@
 import { audioReady, toggleMute, toggleSfxMute } from '../audio/sfx.ts'
 import { applyTouch } from './touch.ts'
 
-const MOVE_CODES = new Set([
-  'KeyA',
-  'KeyD',
-  'KeyW',
-  'KeyS',
-  'ArrowLeft',
-  'ArrowRight',
-  'ArrowUp',
-  'ArrowDown',
-])
-
 const GAME_CODES = new Set([
   'KeyA',
   'KeyD',
@@ -90,11 +79,6 @@ export function createDevices(): DeviceState {
   const pads: (Gamepad | null)[] = [null, null]
 
   window.addEventListener('keydown', (e) => {
-    refreshPads(devices)
-    if (MOVE_CODES.has(e.code) && padFakingKeyboard(devices)) {
-      e.preventDefault()
-      return
-    }
     if (GAME_CODES.has(e.code)) e.preventDefault()
     down.add(e.code)
     if (e.code === 'KeyM') {
@@ -161,9 +145,6 @@ export function refreshPads(devices: DeviceState): void {
     if (!p) devices.padArmed[i] = false
     else if (facePressed(p)) devices.padArmed[i] = true
   }
-  if (padFakingKeyboard(devices)) {
-    for (const code of MOVE_CODES) devices.down.delete(code)
-  }
 }
 
 function padMove(pad: Gamepad | null): { left: boolean; right: boolean; up: boolean; down: boolean } {
@@ -178,10 +159,6 @@ function padMove(pad: Gamepad | null): { left: boolean; right: boolean; up: bool
   else if (ax >= dead) h = 1
   if (ay <= -dead) v = 1
   else if (ay >= dead) v = -1
-  if (Math.abs(ax) >= dead && Math.abs(ay) >= dead) {
-    if (Math.abs(ax) > Math.abs(ay)) v = 0
-    else h = 0
-  }
   if (pad.buttons[14]?.pressed) h = -1
   if (pad.buttons[15]?.pressed) h = 1
   if (pad.buttons[12]?.pressed) v = 1
@@ -193,31 +170,13 @@ function padMove(pad: Gamepad | null): { left: boolean; right: boolean; up: bool
   return out
 }
 
-function padDirecting(pad: Gamepad | null): boolean {
-  if (!pad) return false
-  if (pad.buttons[0]?.pressed || pad.buttons[1]?.pressed || pad.buttons[2]?.pressed || pad.buttons[3]?.pressed) {
-    return true
-  }
-  if (pad.buttons[12]?.pressed || pad.buttons[13]?.pressed || pad.buttons[14]?.pressed || pad.buttons[15]?.pressed) {
-    return true
-  }
-  const d = padMove(pad)
-  return d.left || d.right || d.up || d.down
-}
-
-/** Pads type fake WASD/arrows. While a pad is talking, ignore those keys. */
-export function padFakingKeyboard(devices: DeviceState): boolean {
-  return padDirecting(devices.pads[0]) || padDirecting(devices.pads[1])
-}
-
 export function readP1(devices: DeviceState): RawStick {
   const d = devices.down
   const s = emptyStick()
-  const ghost = padFakingKeyboard(devices)
-  if (!ghost && d.has('KeyA')) s.left = true
-  if (!ghost && d.has('KeyD')) s.right = true
-  if (!ghost && d.has('KeyW')) s.up = true
-  if (!ghost && d.has('KeyS')) s.down = true
+  if (d.has('KeyA')) s.left = true
+  if (d.has('KeyD')) s.right = true
+  if (d.has('KeyW')) s.up = true
+  if (d.has('KeyS')) s.down = true
   if (d.has('KeyU')) s.lp = true
   if (d.has('KeyI')) s.hp = true
   if (d.has('KeyJ')) s.lk = true
@@ -232,11 +191,10 @@ export function readP1(devices: DeviceState): RawStick {
 export function readP2(devices: DeviceState): RawStick {
   const d = devices.down
   const s = emptyStick()
-  const ghost = padFakingKeyboard(devices)
-  if (!ghost && d.has('ArrowLeft')) s.left = true
-  if (!ghost && d.has('ArrowRight')) s.right = true
-  if (!ghost && d.has('ArrowUp')) s.up = true
-  if (!ghost && d.has('ArrowDown')) s.down = true
+  if (d.has('ArrowLeft')) s.left = true
+  if (d.has('ArrowRight')) s.right = true
+  if (d.has('ArrowUp')) s.up = true
+  if (d.has('ArrowDown')) s.down = true
   if (d.has('Numpad4') || d.has('KeyO')) s.lp = true
   if (d.has('Numpad5') || d.has('KeyP')) s.hp = true
   if (d.has('Numpad1') || d.has('KeyL')) s.lk = true

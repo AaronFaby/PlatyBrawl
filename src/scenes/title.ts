@@ -20,6 +20,7 @@ export function titleScene(game: Game): Scene {
   return {
     id: 'title',
     enter() {
+      game.session.p2Cpu = true
       flash = 0
       slam = -1
       armTitleAttract()
