@@ -11,6 +11,7 @@ export const WINS_NEEDED = 2
 export const JUMP_V = -6.15
 export const GRAVITY = 0.28
 export const THROW_RANGE = 84
+export const THROW_COOLDOWN = 120 // 2 seconds at 60 Hz
 export const REEL_SPEED = 6
 export const REEL_STOP = 32
 export const WAKEUP_INVULN = 6
