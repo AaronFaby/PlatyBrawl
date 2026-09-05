@@ -134,6 +134,7 @@ export type Fighter = {
   radHits: number
   lpTap: number
   lkTap: number
+  throwCooldown: number
   reversal: boolean
   reversalLeft: number
 }

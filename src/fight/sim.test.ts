@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { cancelAnnounce, spokenCallouts } from '../audio/announce.ts'
 import { STAGE_IDS } from '../data/stages.ts'
-import { currentFrame } from './fighter.ts'
+import { currentFrame, resetFighter } from './fighter.ts'
+import { THROW_COOLDOWN } from '../config.ts'
 import { emptyInput, type VirtualInput } from '../input/virtual.ts'
 import { createMatch, tickMatch } from './match.ts'
 
@@ -34,6 +35,43 @@ function skip(world: ReturnType<typeof createMatch>, n: number, p1 = emptyInput(
 }
 
 describe('review regressions', () => {
+  it.each([0, 1] as const)('limits player %i throws to once every 120 simulation frames', (attackerId) => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    const victimId = attackerId === 0 ? 1 : 0
+    world.fighters[0].x = attackerId === 0 ? 650 : 36
+    world.fighters[1].x = attackerId === 0 ? 684 : 70
+    const attacker = world.fighters[attackerId]
+    const victim = world.fighters[victimId]
+    const inputs: [VirtualInput, VirtualInput] = [emptyInput(), emptyInput()]
+    inputs[attackerId] = hold(emptyInput(), { lp: true, lk: true })
+    tickMatch(world, inputs, false)
+    expect(attacker.throwCooldown).toBe(THROW_COOLDOWN)
+    expect(victim.throwCooldown).toBe(0)
+    expect(victim.hp).toBe(920)
+    inputs[attackerId] = hold(inputs[attackerId], { lp: true, lk: true })
+    for (let i = 0; i < 119; i++) {
+      tickMatch(world, inputs, false)
+      expect(victim.hp).toBe(920)
+    }
+    expect(attacker.throwCooldown).toBe(1)
+    tickMatch(world, inputs, false)
+    expect(victim.hp).toBe(840)
+    expect(attacker.throwCooldown).toBe(THROW_COOLDOWN)
+    resetFighter(attacker, 220, 1)
+    expect(attacker.throwCooldown).toBe(0)
+  })
+
+  it('does not start the throw cooldown on a missed attempt or prevent walking', () => {
+    const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
+    skip(world, 120)
+    const x = world.fighters[0].x
+    tickMatch(world, [hold(emptyInput(), { lp: true, lk: true, dir: 6 }), emptyInput()], false)
+    expect(world.fighters[0].throwCooldown).toBe(0)
+    expect(world.fighters[0].x).toBeGreaterThan(x)
+    expect(world.fighters[1].hp).toBe(1000)
+  })
+
   it.each([0, 1] as const)('lets player %i jump out of repeated corner throws after wakeup', (victimId) => {
     const world = createMatch({ p1: 'bob', p2: 'bob', p2Cpu: false })
     skip(world, 120)

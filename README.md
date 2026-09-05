@@ -47,7 +47,7 @@ Rematch keeps the last difficulty. Human versus human hides the toggle. The VS s
 | **Chainsaw Platy** | Grappler | **Chain Hook** `↓ ↘ → + P` · **Saw Slash** `↓ ↘ → + K` |
 | **Toxic Platy** | Hazmat | **Gas Bomb** `↓ ↘ → + P` · **Meltdown** `↓ ↙ ← + K` |
 
-Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Light and heavy versions of a special come from the light versus heavy button. The announcer calls **ROUND 1**, **FIGHT**, **K.O.**, **TIME**, and **YOU WIN**, plus hit callouts — **FIRST STRIKE!**, **COUNTER!**, **REVERSAL!**, **EXCELLENT**, **PERFECT**, **DOUBLE K.O.** — when those banners flash.
+Everyone also has standing and crouching punches/kicks, a jump, and a throw (**LP + LK** while close). Each successful throw starts a **2-second cooldown** for that fighter. Light and heavy versions of a special come from the light versus heavy button. The announcer calls **ROUND 1**, **FIGHT**, **K.O.**, **TIME**, and **YOU WIN**, plus hit callouts — **FIRST STRIKE!**, **COUNTER!**, **REVERSAL!**, **EXCELLENT**, **PERFECT**, **DOUBLE K.O.** — when those banners flash.
 
 Motions are relative to the way you face (numpad notation):
 

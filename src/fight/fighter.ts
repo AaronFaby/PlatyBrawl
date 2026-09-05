@@ -6,6 +6,7 @@ import {
   REEL_SPEED,
   STAGE_PAD,
   STAGE_W,
+  THROW_COOLDOWN,
   THROW_RANGE,
   WAKEUP_INVULN,
 } from '../config.ts'
@@ -72,6 +73,7 @@ export function createFighter(id: PlayerId, charId: CharId, x: number, facing: F
     radHits: 0,
     lpTap: -99,
     lkTap: -99,
+    throwCooldown: 0,
     reversal: false,
     reversalLeft: 0,
   }
@@ -107,6 +109,7 @@ export function resetFighter(f: Fighter, x: number, facing: Facing): void {
   f.radHits = 0
   f.lpTap = -99
   f.lkTap = -99
+  f.throwCooldown = 0
   f.reversal = false
   f.reversalLeft = 0
   resetBuffer(f.buffer)
@@ -278,6 +281,7 @@ function canThrowNow(f: Fighter): boolean {
 }
 
 function tryThrow(f: Fighter, other: Fighter, match: MatchState): boolean {
+  if (f.throwCooldown > 0) return false
   if (!grounded(f) || !grounded(other)) return false
   if (other.wakeupInvuln > 0) return false
   if (Math.abs(other.x - f.x) > THROW_RANGE) return false
@@ -285,6 +289,7 @@ function tryThrow(f: Fighter, other: Fighter, match: MatchState): boolean {
     return false
   }
   startMove(f, 'throw')
+  f.throwCooldown = THROW_COOLDOWN
   f.vx = 0
   queueLandedHit(match, f, other)
   other.status = 'thrown'
@@ -472,6 +477,7 @@ export function faceOpponent(f: Fighter, other: Fighter): void {
 }
 
 export function tickFighter(f: Fighter, input: VirtualInput, hooks: FightHooks, locked: boolean): void {
+  if (f.throwCooldown > 0) f.throwCooldown -= 1
   if (f.flash > 0) f.flash -= 1
   if (f.wakeupInvuln > 0 && f.status !== 'wakeup') f.wakeupInvuln -= 1
   if (input.lpPress) f.lpTap = hooks.frame
