@@ -163,10 +163,12 @@ export function tickProjectiles(list: Projectile[]): void {
 
 export function clashProjectiles(list: Projectile[]): void {
   for (let i = 0; i < list.length; i++) {
+    if (list[i].hasHit) continue
     for (let j = i + 1; j < list.length; j++) {
       const a = list[i]
       const b = list[j]
-      if (a.owner === b.owner) continue
+      if (a.hasHit) break
+      if (b.hasHit || a.owner === b.owner) continue
       const A = projBox(a)
       const B = projBox(b)
       const hit =

@@ -24,7 +24,7 @@ export function pushDir(buf: InputBuffer, worldDir: number, frame: number, facin
   const holdingBack = rel === 4 || rel === 1 || rel === 7
   if (holdingBack) {
     buf.chargeBack += 1
-    buf.chargeGrace = 14
+    if (buf.chargeBack >= CHARGE_FRAMES) buf.chargeGrace = 14
   } else if (buf.chargeGrace > 0) {
     buf.chargeGrace -= 1
   } else {

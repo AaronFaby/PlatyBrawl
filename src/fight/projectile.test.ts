@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createFighter } from './fighter.ts'
-import { spawnFrom } from './projectile.ts'
+import { clashProjectiles, spawnFrom } from './projectile.ts'
 
 describe('spawnFrom', () => {
   it('puts a soldier bullet at the pistol muzzle, not over the helmet', () => {
@@ -65,4 +65,28 @@ describe('spawnFrom', () => {
     expect(q.y).toBeCloseTo(left.y - 49.6, 1)
     expect(q.pull).toBeTruthy()
   })
+})
+
+it('spent projectiles cannot clash and each live shot clashes only once', () => {
+  const left = createFighter(0, 'chainsaw', 220, 1)
+  const right = createFighter(1, 'ninja', 220, -1)
+  const spent = spawnFrom(left, 'chain', false)
+  spent.hasHit = true
+  spent.tether = 1
+  const first = spawnFrom(right, 'shuriken', false)
+  const second = spawnFrom(right, 'shuriken', false)
+  first.x = second.x = spent.x
+  first.y = second.y = spent.y
+  const live = spawnFrom(left, 'chain', false)
+  clashProjectiles([live, first, spent, second])
+  expect(spent.hasHit).toBe(true)
+  expect(first.hasHit).toBe(true)
+  expect(second.hasHit).toBe(false)
+  expect(live.hasHit).toBe(true)
+
+  const fresh = spawnFrom(right, 'shuriken', false)
+  fresh.x = spent.x
+  fresh.y = spent.y
+  clashProjectiles([fresh, spent])
+  expect(fresh.hasHit).toBe(false)
 })

@@ -48,9 +48,13 @@ export function fightScene(game: Game): Scene {
       if (paused && game.devices.down.has('Escape')) paused = false
       if (paused) return
 
-      let p2 = game.p2
-      if (game.session.p2Cpu) p2 = tickCpu(game.cpu, world.fighters[1], world.fighters[0])
+      let p2 = game.session.p2Cpu ? emptyInput() : game.p2
+      if (game.session.p2Cpu && world.match.phase === 'fight') {
+        p2 = tickCpu(game.cpu, world.fighters[1], world.fighters[0])
+      }
+      const round = world.match.round
       tickMatch(world, [game.p1, p2], game.devices.debugDummyBlock)
+      if (world.match.round !== round) resetCpu(game.cpu)
       updateCam(game.cam, world.fighters[0], world.fighters[1])
 
       for (const f of world.fighters) {
