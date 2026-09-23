@@ -86,7 +86,7 @@ async function main() {
   await lockThroughArena(page)
   await waitMs(500)
   await shot(page, '03-versus')
-  await waitMs(2200)
+  await waitMs(3600)
   await shot(page, '04-bob-fight')
 
   await hold(page, 'KeyD', 500)
@@ -120,7 +120,7 @@ async function main() {
   await waitMs(150)
   await shot(page, '08-select-cyber')
   await lockThroughArena(page)
-  await waitMs(2200)
+  await waitMs(3600)
   await shot(page, '09-cyber-fight')
   await hold(page, 'KeyA', 800)
   await page.keyboard.down('KeyD')

@@ -43,4 +43,25 @@ describe('motion matcher', () => {
     pushDir(buf, 6, f, 1)
     expect(matchMotion(buf, 'charge', f, 1)).toBe(false)
   })
+
+  it('does not accumulate charge from brief back taps', () => {
+    const buf = createBuffer()
+    let frame = 0
+    for (let i = 0; i < CHARGE_FRAMES; i++) {
+      pushDir(buf, 4, frame++, 1)
+      pushDir(buf, 6, frame++, 1)
+    }
+    expect(matchMotion(buf, 'charge', frame, 1)).toBe(false)
+  })
+
+  it('keeps completed charge briefly after releasing back', () => {
+    const buf = createBuffer()
+    let frame = 0
+    for (let i = 0; i < CHARGE_FRAMES; i++) pushDir(buf, 4, frame++, 1)
+    for (let i = 0; i < 13; i++) pushDir(buf, 5, frame++, 1)
+    pushDir(buf, 6, frame++, 1)
+    expect(matchMotion(buf, 'charge', frame, 1)).toBe(true)
+    pushDir(buf, 6, frame, 1)
+    expect(matchMotion(buf, 'charge', frame, 1)).toBe(false)
+  })
 })

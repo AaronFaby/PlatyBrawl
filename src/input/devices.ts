@@ -101,8 +101,8 @@ export function createDevices(): DeviceState {
     down.delete(e.code)
   })
   window.addEventListener('blur', () => down.clear())
-  window.addEventListener('gamepadconnected', () => pollPads(pads))
-  window.addEventListener('gamepaddisconnected', () => pollPads(pads))
+  window.addEventListener('gamepadconnected', () => refreshPads(devices))
+  window.addEventListener('gamepaddisconnected', () => refreshPads(devices))
 
   const devices: DeviceState = {
     down,
@@ -127,23 +127,30 @@ function facePressed(pad: Gamepad | null): boolean {
 }
 
 /** Slot 0 is always P1. Slot 1 is a second distinct pad only — never the same stick twice. */
-function pollPads(pads: (Gamepad | null)[]): void {
+function pollPads(devices: DeviceState): void {
+  const pads = devices.pads
   const list = navigator.getGamepads ? [...navigator.getGamepads()].filter((g): g is Gamepad => !!g) : []
-  const unique: Gamepad[] = []
-  for (const g of list) {
-    if (unique.some((u) => u.index === g.index)) continue
-    unique.push(g)
+  for (let i = 0; i < 2; i++) {
+    const old = pads[i]
+    if (!old) continue
+    const current = list.find((g) => g.index === old.index)
+    if (!current || current.id !== old.id) devices.padArmed[i] = false
+    pads[i] = current ?? null
   }
-  pads[0] = unique[0] ?? null
-  pads[1] = unique[1] ?? null
+  for (const g of list) {
+    if (pads.some((p) => p?.index === g.index)) continue
+    const slot = pads.indexOf(null)
+    if (slot < 0) break
+    pads[slot] = g
+  }
 }
 
 export function refreshPads(devices: DeviceState): void {
-  pollPads(devices.pads)
+  pollPads(devices)
   for (let i = 0; i < 2; i++) {
     const p = devices.pads[i]
     if (!p) devices.padArmed[i] = false
-    else if (facePressed(p)) devices.padArmed[i] = true
+    else if (facePressed(p) || !!p.buttons[9]?.pressed) devices.padArmed[i] = true
   }
 }
 

@@ -20,6 +20,13 @@ function fakePad(axes: number[], dpadRight = false, face = false): Gamepad {
   } as unknown as Gamepad
 }
 
+function padAt(index: number, button: number, id = 'pad'): Gamepad {
+  const pad = fakePad([0, 0])
+  const buttons = [...pad.buttons]
+  buttons[button] = { pressed: true, touched: true, value: 1 }
+  return { ...pad, index, id, buttons }
+}
+
 function mockDevices(keys: string[], pads: DeviceState['pads'] = [null, null]): DeviceState {
   return {
     down: new Set(keys),
@@ -116,6 +123,50 @@ describe('mixed keyboard and controller input', () => {
     expect(readP1(d).left).toBe(true)
     expect(readP2(d).right).toBe(true)
     expect((slot === 0 ? readP1(d) : readP2(d)).lp).toBe(true)
+  })
+})
+
+describe('controller slots', () => {
+  it('keeps P2 in P2 when P1 disconnects and resets arming on replacement', () => {
+    let connected: (Gamepad | null)[] = [padAt(0, 0), padAt(1, 1)]
+    vi.stubGlobal('navigator', { getGamepads: () => connected })
+    const d = mockDevices([])
+    refreshPads(d)
+    expect(readP1(d).lp).toBe(true)
+    expect(readP2(d).hp).toBe(true)
+
+    connected = [null, padAt(1, 1)]
+    refreshPads(d)
+    expect(readP1(d).hp).toBe(false)
+    expect(readP2(d).hp).toBe(true)
+
+    connected = [padAt(0, 9), padAt(1, 1)]
+    refreshPads(d)
+    expect(readP1(d).start).toBe(true)
+    expect(readP2(d).hp).toBe(true)
+
+    connected = [null, padAt(1, 1)]
+    refreshPads(d)
+    connected = [padAt(0, 15), padAt(1, 1)]
+    refreshPads(d)
+    expect(readP1(d).right).toBe(false)
+    expect(d.padArmed[0]).toBe(false)
+  })
+
+  it('assigns a pad with a nonzero index to P1 and Start arms it without joining P2', () => {
+    vi.stubGlobal('navigator', { getGamepads: () => [null, null, padAt(2, 9)] })
+    const d = mockDevices([])
+    refreshPads(d)
+    expect(readP1(d).start).toBe(true)
+    expect(p2WantsJoin(d)).toBe(false)
+  })
+
+  it('lets P2 use Start without treating it as a join', () => {
+    vi.stubGlobal('navigator', { getGamepads: () => [padAt(0, 0), padAt(1, 9)] })
+    const d = mockDevices([])
+    refreshPads(d)
+    expect(readP2(d).start).toBe(true)
+    expect(p2WantsJoin(d)).toBe(false)
   })
 })
 
